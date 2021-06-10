@@ -18,9 +18,24 @@ module housing(
   display_hole_dist, // distance between the screw holes along the button-side edge
   display_hole_offset_y, // distance between top of the board the screw holes
   display_board_thickness, // thickness of the display board
+  battery_length, // length of the battery along the parallel non-wire side
+  battery_width, // length of the battery along the side with the wire
+  battery_thickness, // smallest dimension of the battery
+  explode = 20, // (view only) separation between components when rendering
 ) {
   inner_y = button_shim_extension + $tolerance/2 + pi_rod_spacing_y + 2*(pi_rod_radius + pi_rod_clearance);
   inner_x = pi_rod_spacing_x + 2*(pi_rod_radius + pi_rod_clearance);
+
+  translate([0, 0, -thickness - battery_thickness -$tolerance - explode]) {
+    translate([-thickness, -thickness, -thickness])
+      cube([battery_length + 2*thickness + $tolerance, battery_width + 2*thickness + $tolerance, thickness]);
+    for (i = [0,1])
+      translate([-thickness, i*(battery_width + $tolerance + thickness) - thickness, 0])
+        cube([battery_length + 2*thickness + $tolerance, thickness, battery_thickness + $tolerance]);
+    for (i = [0,1])
+      translate([i*(battery_length + $tolerance + thickness) - thickness, -thickness, 0])
+        cube([thickness, battery_width + 2*thickness + $tolerance, battery_thickness + $tolerance]);
+  }
 
   translate([-thickness,-thickness,-thickness])
     cube([inner_x + 2*thickness, inner_y + 2*thickness, thickness]);
@@ -91,6 +106,9 @@ housing(
   display_hole_dist = 30,
   display_hole_offset_y = 2,
   display_board_thickness = 1.5,
+  battery_length = 50,
+  battery_width = 40,
+  battery_thickness = 7,
   $fn=60,
   $tolerance = 0.7
 );
