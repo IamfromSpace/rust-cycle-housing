@@ -23,8 +23,9 @@ module housing(
   battery_thickness, // smallest dimension of the battery
   explode = 20, // (view only) separation between components when rendering
 ) {
-  inner_y = button_shim_extension + $tolerance/2 + pi_rod_spacing_y + 2*(pi_rod_radius + pi_rod_clearance);
-  inner_x = pi_rod_spacing_x + 2*(pi_rod_radius + pi_rod_clearance);
+  inner_y = button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
+  pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
+  inner_x = pi_length_x + $tolerance;
 
   translate([0, 0, -thickness - battery_thickness -$tolerance - explode]) {
     translate([-thickness, -thickness, -thickness])
@@ -37,10 +38,10 @@ module housing(
         cube([thickness, battery_width + 2*thickness + $tolerance, battery_thickness + $tolerance]);
   }
 
-  translate([-thickness,-thickness,-thickness])
+  translate([-thickness - $tolerance/2,-thickness - $tolerance/2,-thickness])
     cube([inner_x + 2*thickness, inner_y + 2*thickness, thickness]);
 
-  translate([pi_rod_radius + pi_rod_clearance, pi_rod_radius + pi_rod_clearance, 0])
+  translate([pi_rod_clearance, pi_rod_clearance, 0])
     for (x = [0, 1])
       for (y = [0, 1])
         translate([x*pi_rod_spacing_x, y*pi_rod_spacing_y, 0]) {
@@ -50,7 +51,7 @@ module housing(
 
   bottom_of_button_z = button_shim_height + pi_solder_clearance;
 
-  translate([0, inner_y, 0])
+  translate([0, inner_y - $tolerance/2, 0]) {
     difference() {
       cube([inner_x, thickness, bottom_of_button_z + button_opening_z]);
       for (i = [0:4]) {
@@ -59,31 +60,32 @@ module housing(
       }
     }
 
-  button_shim_to_display_dist = display_extension - button_shim_extension;
-  button_shim_bottom_to_display_bottom = display_height - button_shim_height - button_opening_z;
+    button_shim_to_display_dist = display_extension - button_shim_extension;
+    button_shim_bottom_to_display_bottom = display_height - button_shim_height - button_opening_z;
 
-  translate([0, inner_y, bottom_of_button_z + button_opening_z])
-  rotate([90, 0, 0])
-  rotate([0, 90, 0])
-  linear_extrude(inner_x)
-    polygon(
-      [ [0,0]
-      , [0, button_shim_bottom_to_display_bottom]
-      , [thickness + button_shim_to_display_dist, button_shim_bottom_to_display_bottom]
-      , [thickness, 0]
-      ]
-    );
+    translate([0, 0, bottom_of_button_z + button_opening_z])
+    rotate([90, 0, 0])
+    rotate([0, 90, 0])
+    linear_extrude(inner_x)
+      polygon(
+        [ [0,0]
+        , [0, button_shim_bottom_to_display_bottom]
+        , [thickness + button_shim_to_display_dist, button_shim_bottom_to_display_bottom]
+        , [thickness, 0]
+        ]
+      );
 
-  translate([0, inner_y - display_hole_radius, display_height + pi_solder_clearance])
-    difference () {
-      translate([inner_x/2, -button_shim_extension + display_extension - display_hole_offset_y + $tolerance/2, 0])
-        for(i = [-1,1])
-          translate([i * display_hole_dist/2, 0, 0])
-            cylinder(display_board_thickness, display_hole_radius - $tolerance/2, display_hole_radius - $tolerance/2);
-      translate([0, -display_hole_radius, 0])
-        cube([inner_x, 2*display_hole_radius, display_board_thickness]);
+    translate([0, -display_hole_radius, display_height + pi_solder_clearance])
+      difference () {
+        translate([pi_length_x/2, -button_shim_extension + display_extension - display_hole_offset_y + $tolerance/2, 0])
+          for(i = [-1,1])
+            translate([i * display_hole_dist/2, 0, 0])
+              cylinder(display_board_thickness, display_hole_radius - $tolerance/2, display_hole_radius - $tolerance/2);
+        translate([0, -display_hole_radius, 0])
+          cube([pi_length_x, 2*display_hole_radius, display_board_thickness]);
 
-    }
+      }
+  }
 }
 
 housing(
