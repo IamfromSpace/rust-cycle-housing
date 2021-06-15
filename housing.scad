@@ -21,11 +21,13 @@ module housing(
   battery_length, // length of the battery along the parallel non-wire side
   battery_width, // length of the battery along the side with the wire
   battery_thickness, // smallest dimension of the battery
+  sd_card_protrusion, // how far out of the board the sd card sits
   explode = 20, // (view only) separation between components when rendering
 ) {
   inner_y = button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
-  inner_x = pi_length_x + $tolerance;
+  pi_offset_x = sd_card_protrusion;
+  inner_x = sd_card_protrusion + pi_length_x + $tolerance;
 
   translate([0, 0, -thickness - battery_thickness -$tolerance - explode]) {
     translate([-thickness, -thickness, -thickness])
@@ -41,7 +43,7 @@ module housing(
   translate([-thickness - $tolerance/2,-thickness - $tolerance/2,-thickness])
     cube([inner_x + 2*thickness, inner_y + 2*thickness, thickness]);
 
-  translate([pi_rod_clearance, pi_rod_clearance, 0])
+  translate([pi_offset_x + pi_rod_clearance, pi_rod_clearance, 0])
     for (x = [0, 1])
       for (y = [0, 1])
         translate([x*pi_rod_spacing_x, y*pi_rod_spacing_y, 0]) {
@@ -57,14 +59,14 @@ module housing(
       button_x,
       button_opening_x,
       button_opening_z,
-      button_offset,
+      pi_offset_x + button_offset,
       button_shim_height + pi_solder_clearance,
       display_extension - button_shim_extension,
       display_guide_radius,
       display_board_thickness,
       display_guide_dist,
       display_guide_offset_y,
-      pi_length_x/2
+      pi_offset_x + pi_length_x/2
     );
 }
 
@@ -140,6 +142,7 @@ housing(
   battery_length = 50,
   battery_width = 40,
   battery_thickness = 7,
+  sd_card_protrusion = 3,
   $fn=60,
   $tolerance = 0.7
 );
