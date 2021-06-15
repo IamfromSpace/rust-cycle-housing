@@ -29,7 +29,7 @@ module housing(
   pi_offset_x = sd_card_protrusion;
   inner_x = sd_card_protrusion + pi_length_x + $tolerance;
 
-  translate([0, 0, -thickness - battery_thickness -$tolerance - explode]) {
+  translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
     translate([-thickness, -thickness, -thickness])
       cube([battery_length + 2*thickness + $tolerance, battery_width + 2*thickness + $tolerance, thickness]);
     for (i = [0,1])
