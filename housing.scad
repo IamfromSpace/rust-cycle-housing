@@ -21,6 +21,7 @@ module housing(
   battery_length, // length of the battery along the parallel non-wire side
   battery_width, // length of the battery along the side with the wire
   battery_thickness, // smallest dimension of the battery
+  battery_guard_ratio, // how much of the available space is consumed by the battery guards
   sd_card_protrusion, // how far out of the board the sd card sits
   gps_board_offset, // how far the center of the GPS board is from the edge of the pi board
   gps_board_width, // how wide the GPS board is against the base of the housing
@@ -39,12 +40,20 @@ module housing(
   translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
     translate([-thickness, -thickness, -thickness])
       cube([battery_length + 2*thickness + $tolerance, battery_width + 2*thickness + $tolerance, thickness]);
-    for (i = [0,1])
+    for (i = [0])
       translate([-thickness, i*(battery_width + $tolerance + thickness) - thickness, 0])
         cube([battery_length + 2*thickness + $tolerance, thickness, battery_thickness + $tolerance]);
     for (i = [0,1])
+      translate([battery_length * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, battery_width + $tolerance, 0])
+        cube([battery_length * battery_guard_ratio/2, thickness, battery_thickness/2]);
+
+    for (i = [0])
       translate([i*(battery_length + $tolerance + thickness) - thickness, -thickness, 0])
         cube([thickness, battery_width + 2*thickness + $tolerance, battery_thickness + $tolerance]);
+
+    for (i = [0,1])
+      translate([battery_length + $tolerance, battery_width * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, 0])
+        cube([thickness, battery_width * battery_guard_ratio/2, battery_thickness/2]);
   }
 
   translate([0,0, -thickness])
@@ -173,6 +182,7 @@ housing(
   battery_length = 50,
   battery_width = 40,
   battery_thickness = 7,
+  battery_guard_ratio = 0.15,
   sd_card_protrusion = 3,
   gps_board_offset = 6,
   gps_board_width = 23,
