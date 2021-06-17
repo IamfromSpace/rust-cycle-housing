@@ -22,9 +22,15 @@ module housing(
   battery_width, // length of the battery along the side with the wire
   battery_thickness, // smallest dimension of the battery
   sd_card_protrusion, // how far out of the board the sd card sits
+  gps_board_offset, // how far the center of the GPS board is from the edge of the pi board
+  gps_board_width, // how wide the GPS board is against the base of the housing
+  gps_board_thickness, // thickness of the GPS board
+  gps_usb_width, // how much space should be given to avoid the usb connector
+  gps_safe_grip_depth, // how tall the grips can be on the GPS board
   explode = 20, // (view only) separation between components when rendering
 ) {
-  inner_y = button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
+  pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
+  inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
   inner_x = sd_card_protrusion + pi_length_x + $tolerance;
@@ -43,7 +49,7 @@ module housing(
   translate([-thickness - $tolerance/2,-thickness - $tolerance/2,-thickness])
     cube([inner_x + 2*thickness, inner_y + 2*thickness, thickness]);
 
-  translate([pi_offset_x + pi_rod_clearance, pi_rod_clearance, 0])
+  translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
     for (x = [0, 1])
       for (y = [0, 1])
         translate([x*pi_rod_spacing_x, y*pi_rod_spacing_y, 0]) {
@@ -68,6 +74,9 @@ module housing(
       display_guide_offset_y,
       pi_offset_x + pi_length_x/2
     );
+
+  translate([pi_offset_x, 0, 0])
+    board_grips(thickness, gps_board_thickness, gps_board_width, gps_usb_width, gps_safe_grip_depth);
 }
 
 module button_wall(
@@ -119,6 +128,22 @@ module button_wall(
     }
 }
 
+module board_grips(
+  thickness,
+  board_thickness,
+  length,
+  gap_width,
+  grip_height,
+  center=false
+) {
+  translate([center ? 0 : length/2, center ? 0 : board_thickness/2 + thickness, 0])
+  for (i = [0:3])
+  mirror([floor(i / 2), 0, 0])
+    mirror([0, i % 2, 0])
+      translate([gap_width/2, (board_thickness + $tolerance)/2, 0])
+        cube([(length - gap_width)/2, thickness, grip_height]);
+}
+
 housing(
   thickness = 3,
   pi_rod_radius = 1.5,
@@ -143,6 +168,11 @@ housing(
   battery_width = 40,
   battery_thickness = 7,
   sd_card_protrusion = 3,
+  gps_board_offset = 6,
+  gps_board_width = 23,
+  gps_board_thickness = 1.5,
+  gps_usb_width = 8,
+  gps_safe_grip_depth = 2,
   $fn=60,
   $tolerance = 0.7
 );
