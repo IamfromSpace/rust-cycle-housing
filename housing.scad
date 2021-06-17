@@ -27,13 +27,14 @@ module housing(
   gps_board_thickness, // thickness of the GPS board
   gps_usb_width, // how much space should be given to avoid the usb connector
   gps_safe_grip_depth, // how tall the grips can be on the GPS board
+  power_cutout, // the width to keep open so the battery housing cavity opens freely
   explode = 20, // (view only) separation between components when rendering
 ) {
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
   inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
-  inner_x = sd_card_protrusion + pi_length_x + $tolerance;
+  inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout;
 
   translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
     translate([-thickness, -thickness, -thickness])
@@ -46,8 +47,13 @@ module housing(
         cube([thickness, battery_width + 2*thickness + $tolerance, battery_thickness + $tolerance]);
   }
 
-  translate([-thickness - $tolerance/2,-thickness - $tolerance/2,-thickness])
-    cube([inner_x + 2*thickness, inner_y + 2*thickness, thickness]);
+  translate([0,0, -thickness])
+    difference() {
+      translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
+        cube([inner_x + 2*thickness, inner_y + 2*thickness, thickness]);
+      translate([inner_x - power_cutout, 0, 0])
+        cube([power_cutout, inner_y, thickness]);
+    }
 
   translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
     for (x = [0, 1])
@@ -173,6 +179,7 @@ housing(
   gps_board_thickness = 1.5,
   gps_usb_width = 8,
   gps_safe_grip_depth = 2,
+  power_cutout = 15,
   $fn=60,
   $tolerance = 0.7
 );
