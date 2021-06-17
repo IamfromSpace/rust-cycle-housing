@@ -37,19 +37,24 @@ module housing(
   pi_offset_x = sd_card_protrusion;
   inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout;
 
+  joining_plane_x = max(inner_x, battery_length + $tolerance);
+  joining_plane_y = max(inner_y, battery_width + $tolerance);
+
   translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
     translate([-thickness, -thickness, -thickness])
-      cube([battery_length + 2*thickness + $tolerance, battery_width + 2*thickness + $tolerance, thickness]);
-    for (i = [0])
-      translate([-thickness, i*(battery_width + $tolerance + thickness) - thickness, 0])
-        cube([battery_length + 2*thickness + $tolerance, thickness, battery_thickness + $tolerance]);
+      cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
+
+    for (i = [0,1])
+      translate([-thickness, i*(joining_plane_y + thickness) - thickness, 0])
+        cube([joining_plane_x + 2*thickness, thickness, battery_thickness + $tolerance]);
+
     for (i = [0,1])
       translate([battery_length * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, battery_width + $tolerance, 0])
         cube([battery_length * battery_guard_ratio/2, thickness, battery_thickness/2]);
 
-    for (i = [0])
-      translate([i*(battery_length + $tolerance + thickness) - thickness, -thickness, 0])
-        cube([thickness, battery_width + 2*thickness + $tolerance, battery_thickness + $tolerance]);
+    for (i = [0,1])
+      translate([i*(joining_plane_x + thickness) - thickness, -thickness, 0])
+        cube([thickness, joining_plane_y + 2*thickness, battery_thickness + $tolerance]);
 
     for (i = [0,1])
       translate([battery_length + $tolerance, battery_width * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, 0])
@@ -59,7 +64,7 @@ module housing(
   translate([0,0, -thickness])
     difference() {
       translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
-        cube([inner_x + 2*thickness, inner_y + 2*thickness, thickness]);
+        cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
       translate([inner_x - power_cutout, 0, 0])
         cube([power_cutout, inner_y, thickness]);
     }
@@ -75,7 +80,7 @@ module housing(
   translate([0, inner_y - $tolerance/2, 0])
     button_wall(
       thickness,
-      inner_x,
+      joining_plane_x,
       display_height + pi_solder_clearance,
       button_x,
       button_opening_x,
