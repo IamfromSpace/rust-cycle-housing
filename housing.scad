@@ -164,6 +164,84 @@ module board_grips(
         cube([(length - gap_width)/2, thickness, grip_height]);
 }
 
+module screw_housing(
+  screwed_depth,
+  insert_depth,
+  thickness,
+  major_radius,
+  minor_radius,
+  head_radius,
+  component = "BOTTOM",
+  is_stacked = false,
+  is_flipped = false,
+  align = "CENTER",
+  mode = "COMPOSITE"
+) {
+  head_depth = head_radius - major_radius;
+  true_insert_depth = max(head_depth + thickness, insert_depth);
+  depth = screwed_depth + true_insert_depth;
+  excess_depth = true_insert_depth - head_depth - thickness;
+  alignment
+    = align == "MINOR"
+      ? minor_radius + $tolerance /2
+    : align == "MAJOR"
+      ? major_radius + $tolerance/2
+    : align == "HEAD"
+      ? head_radius + $tolerance/2
+    : 0
+    ;
+
+  module bottom_positive() {
+      cylinder(screwed_depth, major_radius + thickness + $tolerance/2, major_radius + thickness + $tolerance/2);
+  }
+
+  module bottom_negative() {
+    cylinder(depth, minor_radius + $tolerance/2, minor_radius + $tolerance/2);
+  }
+
+  module top_positive() {
+      cylinder(true_insert_depth, major_radius + thickness + $tolerance/2, major_radius + thickness + $tolerance/2);
+  }
+
+  module top_negative() {
+    cylinder(thickness, major_radius + $tolerance/2, major_radius + $tolerance/2);
+    translate([0, 0, thickness]) {
+      cylinder(head_depth, major_radius + $tolerance/2, head_radius + $tolerance/2);
+      translate([0, 0, head_depth])
+        cylinder(excess_depth, head_radius + $tolerance/2, head_radius + $tolerance/2);
+    }
+  }
+
+  module difference_mode(m = "COMPOSITE") {
+    if (m == "NEGATIVE") {
+      children(1);
+    } else {
+      difference() {
+        children(0);
+        if (m == "COMPOSITE")
+          children(1);
+      }
+    }
+  }
+
+  translate ([alignment, 0, 0]) {
+    if (component == "BOTTOM")
+      translate([0, 0, is_stacked && is_flipped ? true_insert_depth : 0])
+        difference_mode(mode) {
+          bottom_positive();
+          bottom_negative();
+        }
+    if (component == "TOP")
+      translate([0, 0, is_stacked && !is_flipped ? screwed_depth : 0])
+        translate([0, 0, is_flipped ? true_insert_depth : 0])
+          mirror([0, 0, is_flipped ? 1 : 0])
+            difference_mode(mode) {
+              top_positive();
+              top_negative();
+            }
+  }
+}
+
 housing(
   thickness = 3,
   pi_rod_radius = 1.5,
