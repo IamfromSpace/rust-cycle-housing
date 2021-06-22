@@ -29,6 +29,9 @@ module housing(
   gps_usb_width, // how much space should be given to avoid the usb connector
   gps_safe_grip_depth, // how tall the grips can be on the GPS board
   power_cutout, // the width to keep open so the battery housing cavity opens freely
+  battery_housing_screw_major_radius, // radius of the screw that connects the battery housing to the main housing, from center to outermost thread
+  battery_housing_screw_minor_radius, // radius of the screw that connects the battery housing to the main housing, from center shaft (threads ignored)
+  battery_housing_screw_head_radius, // radius of the screw that connects the battery housing to the main housing, from center to the outer most point of the head
   explode = 20, // (view only) separation between components when rendering
 ) {
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
@@ -40,9 +43,28 @@ module housing(
   joining_plane_x = max(inner_x, battery_length + $tolerance);
   joining_plane_y = max(inner_y, battery_width + $tolerance);
 
+  module battery_housing_screw_housing(component) {
+    screw_housing(
+      battery_thickness + $tolerance + thickness,
+      0,
+      thickness,
+      battery_housing_screw_major_radius,
+      battery_housing_screw_minor_radius,
+      battery_housing_screw_head_radius,
+      component,
+      align = "HEAD"
+    );
+  }
+
   translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
-    translate([-thickness, -thickness, -thickness])
+    translate([-thickness, -thickness, -thickness]) {
       cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
+
+      for (i = [0,1])
+        translate([(1 - i) * (joining_plane_x + 2 * thickness), joining_plane_y/2 + thickness, 0])
+          rotate([0, 0, i * 180])
+            battery_housing_screw_housing("BOTTOM");
+    }
 
     for (i = [0,1])
       translate([-thickness, i*(joining_plane_y + thickness) - thickness, 0])
@@ -61,13 +83,19 @@ module housing(
         cube([thickness, battery_width * battery_guard_ratio/2, battery_thickness/2]);
   }
 
-  translate([0,0, -thickness])
+  translate([0, 0, -thickness]) {
     difference() {
       translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
         cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
       translate([inner_x - power_cutout, 0, 0])
         cube([power_cutout, inner_y, thickness]);
     }
+
+    for (i = [0,1])
+      translate([(1 - i) * (joining_plane_x + 2 * thickness) - thickness, joining_plane_y/2, 0])
+        rotate([0, 0, i * 180])
+          battery_housing_screw_housing("TOP");
+  }
 
   translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
     for (x = [0, 1])
@@ -273,6 +301,9 @@ housing(
   gps_usb_width = 8,
   gps_safe_grip_depth = 2,
   power_cutout = 15,
+  battery_housing_screw_major_radius = 1.4,
+  battery_housing_screw_minor_radius = 1.2,
+  battery_housing_screw_head_radius = 2,
   $fn=60,
   $tolerance = 0.7
 );
