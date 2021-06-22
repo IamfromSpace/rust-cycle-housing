@@ -115,7 +115,7 @@ module housing(
       button_opening_z,
       pi_offset_x + button_offset,
       button_shim_height + pi_solder_clearance,
-      display_extension - button_shim_extension,
+      display_extension,
       display_guide_radius,
       display_board_thickness,
       display_guide_dist,
@@ -165,10 +165,11 @@ module button_wall(
       ]
     );
 
+  // TODO: shallow as possible overhang to support the guides
   translate([0, -display_guide_radius, height])
     difference () {
       for(i = [-1,1])
-        translate([display_board_center_offset + i * display_guide_dist/2, extension - display_guide_offset_y, 0])
+        translate([display_board_center_offset + i * display_guide_dist/2, extension - display_guide_offset_y + thickness, 0])
           cylinder(display_guide_thickness, display_guide_radius - $tolerance/2, display_guide_radius - $tolerance/2);
       translate([0, -display_guide_radius, 0])
         cube([2*display_board_center_offset, 2*display_guide_radius, display_guide_thickness]);
