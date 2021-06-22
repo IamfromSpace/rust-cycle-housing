@@ -307,7 +307,7 @@ housing(
   gps_safe_grip_depth = 4,
   power_cutout = 15,
   battery_housing_screw_major_radius = 1.5, // M3*12
-  battery_housing_screw_minor_radius = 1.25,
+  battery_housing_screw_minor_radius = 1.2,
   battery_housing_screw_head_radius = 2.75,
   $fn=60,
   $tolerance = 0.7
