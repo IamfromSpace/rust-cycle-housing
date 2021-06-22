@@ -33,6 +33,7 @@ module housing(
   battery_housing_screw_minor_radius, // radius of the screw that connects the battery housing to the main housing, from center shaft (threads ignored)
   battery_housing_screw_head_radius, // radius of the screw that connects the battery housing to the main housing, from center to the outer most point of the head
   explode = 20, // (view only) separation between components when rendering
+  component = "ALL"  // Which part to render
 ) {
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
   inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
@@ -56,75 +57,78 @@ module housing(
     );
   }
 
-  translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
-    translate([-thickness, -thickness, -thickness]) {
-      cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
+  if (component == "BATTERY" || component == "ALL")
+    translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
+      translate([-thickness, -thickness, -thickness]) {
+        cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
+
+        for (i = [0,1])
+          translate([(1 - i) * (joining_plane_x + 2 * thickness), joining_plane_y/2 + thickness, 0])
+            rotate([0, 0, i * 180])
+              battery_housing_screw_housing("BOTTOM");
+      }
 
       for (i = [0,1])
-        translate([(1 - i) * (joining_plane_x + 2 * thickness), joining_plane_y/2 + thickness, 0])
+        translate([-thickness, i*(joining_plane_y + thickness) - thickness, 0])
+          cube([joining_plane_x + 2*thickness, thickness, battery_thickness + $tolerance]);
+
+      for (i = [0,1])
+        translate([battery_length * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, battery_width + $tolerance, 0])
+          cube([battery_length * battery_guard_ratio/2, thickness, battery_thickness/2]);
+
+      for (i = [0,1])
+        translate([i*(joining_plane_x + thickness) - thickness, -thickness, 0])
+          cube([thickness, joining_plane_y + 2*thickness, battery_thickness + $tolerance]);
+
+      for (i = [0,1])
+        translate([battery_length + $tolerance, battery_width * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, 0])
+          cube([thickness, battery_width * battery_guard_ratio/2, battery_thickness/2]);
+    }
+
+  if (component == "MAIN" || component == "ALL") {
+    translate([0, 0, -thickness]) {
+      difference() {
+        translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
+          cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
+        translate([inner_x - power_cutout, 0, 0])
+          cube([power_cutout, inner_y, thickness]);
+      }
+
+      for (i = [0,1])
+        translate([(1 - i) * (joining_plane_x + 2 * thickness) - thickness, joining_plane_y/2, 0])
           rotate([0, 0, i * 180])
-            battery_housing_screw_housing("BOTTOM");
+            battery_housing_screw_housing("TOP");
     }
 
-    for (i = [0,1])
-      translate([-thickness, i*(joining_plane_y + thickness) - thickness, 0])
-        cube([joining_plane_x + 2*thickness, thickness, battery_thickness + $tolerance]);
+    translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
+      for (x = [0, 1])
+        for (y = [0, 1])
+          translate([x*pi_rod_spacing_x, y*pi_rod_spacing_y, 0]) {
+            cylinder(pi_rod_height + pi_solder_clearance, pi_rod_radius - $tolerance/2, pi_rod_radius - $tolerance/2);
+            cylinder(pi_solder_clearance, pi_rod_clearance, pi_rod_clearance);
+          }
 
-    for (i = [0,1])
-      translate([battery_length * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, battery_width + $tolerance, 0])
-        cube([battery_length * battery_guard_ratio/2, thickness, battery_thickness/2]);
+    translate([0, inner_y - $tolerance/2, 0])
+      button_wall(
+        thickness,
+        joining_plane_x,
+        display_height + pi_solder_clearance,
+        button_x,
+        button_opening_x,
+        button_opening_z,
+        pi_offset_x + button_offset,
+        button_shim_height + pi_solder_clearance,
+        display_extension,
+        display_guide_radius,
+        display_board_thickness,
+        display_guide_dist,
+        display_guide_offset_y,
+        pi_offset_x + pi_length_x/2
+      );
 
-    for (i = [0,1])
-      translate([i*(joining_plane_x + thickness) - thickness, -thickness, 0])
-        cube([thickness, joining_plane_y + 2*thickness, battery_thickness + $tolerance]);
-
-    for (i = [0,1])
-      translate([battery_length + $tolerance, battery_width * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, 0])
-        cube([thickness, battery_width * battery_guard_ratio/2, battery_thickness/2]);
+    translate([pi_offset_x, 0, 0])
+      board_grips(thickness, gps_board_thickness, gps_board_width, gps_usb_width, gps_safe_grip_depth);
   }
-
-  translate([0, 0, -thickness]) {
-    difference() {
-      translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
-        cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
-      translate([inner_x - power_cutout, 0, 0])
-        cube([power_cutout, inner_y, thickness]);
-    }
-
-    for (i = [0,1])
-      translate([(1 - i) * (joining_plane_x + 2 * thickness) - thickness, joining_plane_y/2, 0])
-        rotate([0, 0, i * 180])
-          battery_housing_screw_housing("TOP");
-  }
-
-  translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
-    for (x = [0, 1])
-      for (y = [0, 1])
-        translate([x*pi_rod_spacing_x, y*pi_rod_spacing_y, 0]) {
-          cylinder(pi_rod_height + pi_solder_clearance, pi_rod_radius - $tolerance/2, pi_rod_radius - $tolerance/2);
-          cylinder(pi_solder_clearance, pi_rod_clearance, pi_rod_clearance);
-        }
-
-  translate([0, inner_y - $tolerance/2, 0])
-    button_wall(
-      thickness,
-      joining_plane_x,
-      display_height + pi_solder_clearance,
-      button_x,
-      button_opening_x,
-      button_opening_z,
-      pi_offset_x + button_offset,
-      button_shim_height + pi_solder_clearance,
-      display_extension,
-      display_guide_radius,
-      display_board_thickness,
-      display_guide_dist,
-      display_guide_offset_y,
-      pi_offset_x + pi_length_x/2
-    );
-
-  translate([pi_offset_x, 0, 0])
-    board_grips(thickness, gps_board_thickness, gps_board_width, gps_usb_width, gps_safe_grip_depth);
 }
 
 module button_wall(
