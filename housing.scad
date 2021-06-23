@@ -32,6 +32,9 @@ module housing(
   battery_housing_screw_major_radius, // radius of the screw that connects the battery housing to the main housing, from center to outermost thread
   battery_housing_screw_minor_radius, // radius of the screw that connects the battery housing to the main housing, from center shaft (threads ignored)
   battery_housing_screw_head_radius, // radius of the screw that connects the battery housing to the main housing, from center to the outer most point of the head
+  bar_radius, // radius of the bars where the stem is clamped
+  stem_width, // widest part of the stem at the front of the clamp on the bars
+  stem_clearance, // how far forward the stem protrudes off the bars
   explode = 20, // (view only) separation between components when rendering
   component = "ALL"  // Which part to render
 ) {
@@ -67,6 +70,21 @@ module housing(
             rotate([0, 0, i * 180])
               battery_housing_screw_housing("BOTTOM");
       }
+
+      for (i = [0,1])
+        translate([(2*i-1) * (stem_width + $tolerance)/2 + joining_plane_x/2, -thickness, -thickness])
+          mirror([i, 0, 0])
+            rotate([0, 0, -90])
+              bar_clamp(
+                thickness,
+                bar_radius,
+                battery_housing_screw_major_radius,
+                battery_housing_screw_minor_radius,
+                battery_housing_screw_head_radius,
+                stem_clearance,
+                thickness + battery_thickness + $tolerance,
+                component = "BOTTOM"
+              );
 
       for (i = [0,1])
         translate([-thickness, i*(joining_plane_y + thickness) - thickness, 0])
@@ -365,6 +383,9 @@ housing(
   battery_housing_screw_major_radius = 1.5, // M3*12
   battery_housing_screw_minor_radius = 1.2,
   battery_housing_screw_head_radius = 2.75,
+  bar_radius = 31.8/2,
+  stem_width = 46,
+  stem_clearance = 8,
   $fn=60,
   $tolerance = 0.7
 );
