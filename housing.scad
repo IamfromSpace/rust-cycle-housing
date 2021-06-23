@@ -301,6 +301,7 @@ module bar_clamp(
   screw_head_radius,
   joint_clearance,
   joint_height,
+  is_stacked = false,
   component = "ALL",
   explode = 20
 ) {
@@ -343,8 +344,8 @@ module bar_clamp(
       x("BOTTOM");
 
     if (component == "TOP" || component == "ALL")
-      translate([0, 0, component == "ALL" ? 2*outer_radius + explode : 0])
-        mirror([0, 0, component == "ALL" ? 1 : 0])
+      translate([0, 0, (component == "ALL" ? explode : 0) + (component == "ALL" || is_stacked ? 2*outer_radius : 0)])
+        mirror([0, 0, component == "ALL" || is_stacked ? 1 : 0])
           x("TOP");
   }
 }
