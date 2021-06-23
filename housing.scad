@@ -247,6 +247,7 @@ module screw_housing(
   component = "BOTTOM",
   is_stacked = false,
   is_flipped = false,
+  is_flat = true,
   align = "CENTER",
   mode = "COMPOSITE"
 ) {
@@ -264,8 +265,15 @@ module screw_housing(
     : 0
     ;
 
+  module positive(depth) {
+    cylinder(depth, major_radius + thickness + $tolerance/2, major_radius + thickness + $tolerance/2);
+    if (is_flat)
+      translate([-major_radius - thickness - $tolerance/2, -major_radius - thickness - $tolerance/2, 0])
+        cube([major_radius + thickness + $tolerance/2, 2*(major_radius + thickness) + $tolerance, depth]);
+  }
+
   module bottom_positive() {
-      cylinder(screwed_depth, major_radius + thickness + $tolerance/2, major_radius + thickness + $tolerance/2);
+    positive(screwed_depth);
   }
 
   module bottom_negative() {
@@ -273,7 +281,7 @@ module screw_housing(
   }
 
   module top_positive() {
-      cylinder(true_insert_depth, major_radius + thickness + $tolerance/2, major_radius + thickness + $tolerance/2);
+    positive(true_insert_depth);
   }
 
   module top_negative() {
