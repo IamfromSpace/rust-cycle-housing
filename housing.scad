@@ -33,6 +33,9 @@ module housing(
   battery_housing_screw_minor_radius, // radius of the screw that connects the battery housing to the main housing, from center shaft (threads ignored)
   battery_housing_screw_head_radius, // radius of the screw that connects the battery housing to the main housing, from center to the outer most point of the head
   bar_radius, // radius of the bars where the stem is clamped
+  bar_clamp_screw_major_radius, // radius of the screw that connects the bar clamp, from center to outermost thread
+  bar_clamp_screw_minor_radius, // radius of the screw that connects the bar clamp, from center shaft (threads ignored)
+  bar_clamp_screw_head_radius, // radius of the screw that connects the bar clamp, from center to the outer most point of the head
   stem_width, // widest part of the stem at the front of the clamp on the bars
   stem_clearance, // how far forward the stem protrudes off the bars
   explode = 20, // (view only) separation between components when rendering
@@ -60,8 +63,29 @@ module housing(
     );
   }
 
-  if (component == "BATTERY" || component == "ALL")
-    translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
+  module bc(component) {
+    bar_clamp(
+      1.5*thickness,
+      bar_radius,
+      bar_clamp_screw_major_radius,
+      bar_clamp_screw_minor_radius,
+      bar_clamp_screw_head_radius,
+      stem_clearance,
+      thickness + battery_thickness + $tolerance,
+      component = component,
+      is_stacked = true
+    );
+  }
+
+  module bc_pair(component) {
+    for (i = [-1,1])
+      translate([0, i * (stem_width + $tolerance)/2, 0])
+        mirror([0, (i + 1)/2, 0])
+          bc(component);
+  }
+
+  translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
+    if (component == "BATTERY" || component == "ALL") {
       translate([-thickness, -thickness, -thickness]) {
         cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
 
@@ -71,20 +95,9 @@ module housing(
               battery_housing_screw_housing("BOTTOM");
       }
 
-      for (i = [0,1])
-        translate([(2*i-1) * (stem_width + $tolerance)/2 + joining_plane_x/2, -thickness, -thickness])
-          mirror([i, 0, 0])
-            rotate([0, 0, -90])
-              bar_clamp(
-                thickness,
-                bar_radius,
-                battery_housing_screw_major_radius,
-                battery_housing_screw_minor_radius,
-                battery_housing_screw_head_radius,
-                stem_clearance,
-                thickness + battery_thickness + $tolerance,
-                component = "BOTTOM"
-              );
+      translate([joining_plane_x/2, -thickness, -thickness])
+        rotate([0, 0, -90])
+          bc_pair("BOTTOM");
 
       for (i = [0,1])
         translate([-thickness, i*(joining_plane_y + thickness) - thickness, 0])
@@ -101,6 +114,15 @@ module housing(
       for (i = [0,1])
         translate([battery_length + $tolerance, battery_width * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, 0])
           cube([thickness, battery_width * battery_guard_ratio/2, battery_thickness/2]);
+      }
+
+      if (component == "ALL")
+        translate([joining_plane_x/2, -thickness, -thickness + 2*explode])
+          rotate([0, 0, -90])
+            bc_pair("TOP");
+
+      if (component == "BAR_CLAMP_TOP")
+        bc("TOP");
     }
 
   if (component == "MAIN" || component == "ALL") {
@@ -385,8 +407,11 @@ housing(
   battery_housing_screw_minor_radius = 1.2,
   battery_housing_screw_head_radius = 2.75,
   bar_radius = 31.8/2,
+  bar_clamp_screw_major_radius = 1.5, // M3*12
+  bar_clamp_screw_minor_radius = 1.2,
+  bar_clamp_screw_head_radius = 3.2,
   stem_width = 46,
-  stem_clearance = 8,
+  stem_clearance = 10,
   $fn=60,
   $tolerance = 0.7
 );
