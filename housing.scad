@@ -33,6 +33,7 @@ module housing(
   battery_housing_screw_minor_radius, // radius of the screw that connects the battery housing to the main housing, from center shaft (threads ignored)
   battery_housing_screw_head_radius, // radius of the screw that connects the battery housing to the main housing, from center to the outer most point of the head
   bar_radius, // radius of the bars where the stem is clamped
+  bar_clamp_gap, // gap between the top and bottom of the bar clamp
   bar_clamp_screw_major_radius, // radius of the screw that connects the bar clamp, from center to outermost thread
   bar_clamp_screw_minor_radius, // radius of the screw that connects the bar clamp, from center shaft (threads ignored)
   bar_clamp_screw_head_radius, // radius of the screw that connects the bar clamp, from center to the outer most point of the head
@@ -73,6 +74,7 @@ module housing(
       stem_clearance,
       thickness + battery_thickness + $tolerance,
       component = component,
+      gap = bar_clamp_gap,
       is_stacked = true
     );
   }
@@ -332,6 +334,7 @@ module bar_clamp(
   joint_clearance,
   joint_height,
   is_stacked = false,
+  gap = 0,
   component = "ALL",
   explode = 20
 ) {
@@ -341,7 +344,7 @@ module bar_clamp(
   outer_radius = thickness + true_inner_radius;
 
   module screw(mode, component) {
-    screw_housing(outer_radius, outer_radius, thickness, screw_major_radius, screw_minor_radius, screw_head_radius, component = component, align = "MAJOR", mode = mode, is_flipped = true);
+    screw_housing(outer_radius - gap/2, outer_radius - gap/2, thickness, screw_major_radius, screw_minor_radius, screw_head_radius, component = component, align = "MAJOR", mode = mode, is_flipped = true);
   }
 
   module double() {
@@ -415,6 +418,7 @@ housing(
   battery_housing_screw_minor_radius = 1.2,
   battery_housing_screw_head_radius = 2.75,
   bar_radius = 31.8/2,
+  bar_clamp_gap = 1,
   bar_clamp_screw_major_radius = 1.5, // M3*12
   bar_clamp_screw_minor_radius = 1.2,
   bar_clamp_screw_head_radius = 3.2,
