@@ -275,6 +275,62 @@ module screw_housing(
   }
 }
 
+module bar_clamp(
+  thickness,
+  bar_radius,
+  screw_major_radius,
+  screw_minor_radius,
+  screw_head_radius,
+  joint_clearance,
+  joint_height,
+  component = "ALL",
+  explode = 20
+) {
+  // This is an unfortunate coupling to the screw module :/
+  width = 2*(screw_major_radius + thickness) + $tolerance;
+  true_inner_radius = bar_radius + $tolerance/2;
+  outer_radius = thickness + true_inner_radius;
+
+  module screw(mode, component) {
+    screw_housing(outer_radius, outer_radius, thickness, screw_major_radius, screw_minor_radius, screw_head_radius, component = component, align = "MAJOR", mode = mode, is_flipped = true);
+  }
+
+  module double() {
+    for(i = [0:1])
+      translate([(1-i)*outer_radius*2, width/2, 0])
+        mirror([i,0,0])
+          children(0);
+  }
+
+  module x(c) {
+    difference() {
+      hull(){
+        double()
+          screw("POSITIVE", component = c);
+
+        if (c == "BOTTOM")
+          mirror([1, 0, 0])
+            cube([joint_clearance - thickness, width, joint_height]);
+      }
+      double()
+        screw("NEGATIVE", component = c);
+      translate([outer_radius, 0, outer_radius])
+        rotate([-90, 0, 0])
+          cylinder(width, true_inner_radius, true_inner_radius);
+    }
+  }
+
+  translate([joint_clearance - thickness, 0, 0]) {
+    if (component == "BOTTOM" || component == "ALL")
+      x("BOTTOM");
+
+    if (component == "TOP" || component == "ALL")
+      translate([0, 0, component == "ALL" ? 2*outer_radius + explode : 0])
+        mirror([0, 0, component == "ALL" ? 1 : 0])
+          x("TOP");
+  }
+}
+
 housing(
   thickness = 2,
   pi_rod_radius = (2.75 - 0.05)/2,
