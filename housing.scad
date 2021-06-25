@@ -64,6 +64,10 @@ module housing(
     );
   }
 
+  // TODO: This fits tightly on the bar, but it also transmits all the
+  // vibrations of the road, which makes the display harder to read.  It may
+  // make sense to leave room for a foam that would keep the clamp tight, but
+  // act as a dampener.
   module bc(component) {
     bar_clamp(
       1.5*thickness,
@@ -79,6 +83,7 @@ module housing(
     );
   }
 
+  // TODO: This is not nearly as wide as the stem; it doesn't fit over it
   module bc_pair(component) {
     for (i = [-1,1])
       translate([0, i * (stem_width + $tolerance)/2, 0])
@@ -142,6 +147,10 @@ module housing(
             battery_housing_screw_housing("TOP");
     }
 
+    // TODO: The rods only act as guides, but offer no tension.  The are also
+    // short enough that the adapter board tends to ride up and then on top.
+    // Either these rods need to be thicker or extended or the top of the
+    // housing needs to hold down the boards.
     translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
       for (x = [0, 1])
         for (y = [0, 1])
@@ -150,6 +159,13 @@ module housing(
             cylinder(pi_solder_clearance, pi_rod_clearance, pi_rod_clearance);
           }
 
+    // TODO: The buttons are not pressable without some sort of implement (was
+    // using a pocket road-side allen key)
+    // TODO: The wall seems to be too high, which lifts the board and is
+    // potentially causing it to separate off the pins
+    // TODO: The wall does not appear to be protruding far enough forward to
+    // allow full thickness in front of the display
+    // TODO: The button openings are offset too far to the right
     translate([0, inner_y - $tolerance/2, 0])
       button_wall(
         thickness,
@@ -168,6 +184,10 @@ module housing(
         pi_offset_x + pi_length_x/2
       );
 
+    // TODO: These fit nicely, but the vibrations jostle it out of the grips.
+    // They need to be tighter (half tolerance, no tolerance?  Is there a
+    // common rule that can be applied for these things?), or there needs to be
+    // pressure from the top of the housing.
     translate([pi_offset_x, 0, 0])
       board_grips(thickness, gps_board_thickness, gps_board_width, gps_usb_width, gps_safe_grip_depth);
   }
