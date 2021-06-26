@@ -160,8 +160,6 @@ module housing(
 
     // TODO: The buttons are not pressable without some sort of implement (was
     // using a pocket road-side allen key)
-    // TODO: The wall does not appear to be protruding far enough forward to
-    // allow full thickness in front of the display
     // TODO: The button openings are offset too far to the right
     translate([0, inner_y - $tolerance/2, 0])
       button_wall(
@@ -414,7 +412,7 @@ housing(
   button_opening_x = 6.7,
   button_opening_z = 4.25,
   button_offset = 16.75,
-  display_extension = 2,
+  display_extension = 2.8,
   display_height = 27,
   display_guide_radius = 1.6,
   display_guide_dist = 34,
