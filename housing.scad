@@ -83,10 +83,9 @@ module housing(
     );
   }
 
-  // TODO: This is not nearly as wide as the stem; it doesn't fit over it
   module bc_pair(component) {
     for (i = [-1,1])
-      translate([0, i * (stem_width + $tolerance)/2, 0])
+      translate([0, -i * (stem_width + $tolerance)/2, 0])
         mirror([0, (i + 1)/2, 0])
           bc(component);
   }
