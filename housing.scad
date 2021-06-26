@@ -160,8 +160,6 @@ module housing(
 
     // TODO: The buttons are not pressable without some sort of implement (was
     // using a pocket road-side allen key)
-    // TODO: The wall seems to be too high, which lifts the board and is
-    // potentially causing it to separate off the pins
     // TODO: The wall does not appear to be protruding far enough forward to
     // allow full thickness in front of the display
     // TODO: The button openings are offset too far to the right
@@ -417,7 +415,7 @@ housing(
   button_opening_z = 4.25,
   button_offset = 16.75,
   display_extension = 2,
-  display_height = 29,
+  display_height = 27,
   display_guide_radius = 1.6,
   display_guide_dist = 34,
   display_guide_offset_y = 3,
