@@ -11,7 +11,7 @@ module housing(
   button_x, // total width of a button
   button_opening_x, // width of the opening to reveal the button
   button_opening_z, // height of the opening to reveal the button
-  button_offset, // distance from button E to its closest side of the board
+  button_offset, // distance from center button E to its closest side of the pi board (measured along the length of the pi).
   display_extension, // how much further the display sticks out beyond the button shim
   display_height, // distance between the bottom of the pi board and the bottom of the display board
   display_guide_radius, // radius of the screw holes on the display board
@@ -206,7 +206,7 @@ module button_wall(
   difference() {
     cube([length, thickness, button_offset_z + button_opening_z]);
     for (i = [0:4]) {
-      translate([i * button_x + button_offset_x, 0, button_offset_z])
+      translate([i * button_x + button_offset_x - button_opening_x/2, 0, button_offset_z])
         cube([button_opening_x, thickness, button_opening_z]);
     }
   }
@@ -410,7 +410,7 @@ housing(
   button_x = 8.7,
   button_opening_x = 6.7,
   button_opening_z = 4.25,
-  button_offset = 16.75,
+  button_offset = 20.1,
   display_extension = 2.8,
   display_height = 27,
   display_guide_radius = 1.6,
