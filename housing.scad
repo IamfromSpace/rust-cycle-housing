@@ -14,10 +14,10 @@ module housing(
   button_offset, // distance from center button E to its closest side of the pi board (measured along the length of the pi).
   display_extension, // how much further the display sticks out beyond the button shim
   display_height, // distance between the bottom of the pi board and the bottom of the display board
-  display_guide_radius, // radius of the screw holes on the display board
+  board_screw_minor_radius, // radius of the screw holes on the display board
+  board_screw_depth, // How deep screws that secure boards will go
   display_guide_dist, // distance between the screw holes along the button-side edge
   display_guide_offset_y, // distance between top of the board the screw holes
-  display_board_thickness, // thickness of the display board
   battery_length, // length of the battery along the parallel non-wire side
   battery_width, // length of the battery along the side with the wire
   battery_thickness, // smallest dimension of the battery
@@ -171,8 +171,8 @@ module housing(
         pi_offset_x + button_offset,
         button_shim_height + pi_solder_clearance,
         display_extension,
-        display_guide_radius,
-        display_board_thickness,
+        board_screw_minor_radius,
+        board_screw_depth,
         display_guide_dist,
         display_guide_offset_y,
         pi_offset_x + pi_length_x/2
@@ -190,19 +190,23 @@ module housing(
 module button_wall(
   thickness, // wall thickness
   length, // how long the wall should be
-  height, // height of the wall _excluding_ the display guides
+  height, // height of the wall
   button_x, // total width of a button
   button_opening_x, // width of the button opening
   button_opening_z, // width of the button opening
   button_offset_x, // offset for the buttons
   button_offset_z, // offset for the buttons
   extension, // how much further the top of the wall should extend
-  display_guide_radius, // radius of the screw holes on the display board
-  display_guide_thickness, // thickness of the display board
-  display_guide_dist, // distance between the screw holes along the button-side edge
-  display_guide_offset_y, // distance between top of the board the screw holes
-  display_board_center_offset // how far the center of the display board is from the origin
+  screw_inner_radius, // radius of the screw holes on the board
+  screw_depth, // how deep the board mounting screws will go into the wall
+  screw_dist, // distance between the screw holes along the button-side edge
+  screw_offset_y, // distance between top of the board the screw holes
+  board_center_offset // how far the center of the board is from the origin
 ) {
+  screw_center_y = extension - screw_offset_y;
+  screw_true_inner_radius = screw_inner_radius + $tolerance/2;
+  screw_true_outer_radius = thickness + screw_true_inner_radius;
+
   difference() {
     cube([length, thickness, button_offset_z + button_opening_z]);
     for (i = [0:4]) {
@@ -213,28 +217,55 @@ module button_wall(
 
   button_shim_bottom_to_display_bottom = height - button_offset_z - button_opening_z;
 
-  translate([0, 0, button_offset_z + button_opening_z])
-  rotate([90, 0, 0])
-  rotate([0, 90, 0])
-  linear_extrude(length)
-    polygon(
-      [ [0,0]
-      , [0, button_shim_bottom_to_display_bottom]
-      , [thickness + extension, button_shim_bottom_to_display_bottom]
-      , [thickness, 0]
-      ]
-    );
+  module left_right() {
+    for(i = [-1,1])
+      translate([board_center_offset + i * screw_dist/2, 0, 0])
+        children();
+  }
 
-  // TODO: shallow as possible overhang to support the guides
-  translate([0, -display_guide_radius, height])
-    difference () {
-      for(i = [-1,1])
-        translate([display_board_center_offset + i * display_guide_dist/2, extension - display_guide_offset_y + thickness, 0])
-          cylinder(display_guide_thickness, display_guide_radius - $tolerance/2, display_guide_radius - $tolerance/2);
-      translate([0, -display_guide_radius, 0])
-        cube([2*display_board_center_offset, 2*display_guide_radius, display_guide_thickness]);
+  translate([0, 0, button_offset_z + button_opening_z]) {
+    difference() {
+      union() {
+        rotate([90, 0, 0])
+        rotate([0, 90, 0])
+        linear_extrude(length)
+          polygon(
+            [ [0,0]
+            , [0, button_shim_bottom_to_display_bottom]
+            , [thickness + extension, button_shim_bottom_to_display_bottom]
+            , [thickness, 0]
+            ]
+          );
 
+
+        intersection() {
+          translate([0, screw_center_y, 0])
+            left_right() {
+              cylinder(button_shim_bottom_to_display_bottom, screw_true_outer_radius, screw_true_outer_radius);
+
+              translate([-screw_true_outer_radius, 0, 0])
+                cube([2*screw_true_outer_radius, -screw_center_y, button_shim_bottom_to_display_bottom]);
+            }
+
+          rotate([90, 0, 0])
+          rotate([0, 90, 0])
+          linear_extrude(length)
+            polygon(
+              [ [0,0]
+              , [0, button_shim_bottom_to_display_bottom]
+              , [screw_center_y - screw_true_outer_radius, button_shim_bottom_to_display_bottom]
+              , [screw_center_y - screw_true_outer_radius, button_shim_bottom_to_display_bottom - screw_depth]
+              ]
+            );
+        }
+      }
+
+      translate([0, screw_center_y, button_shim_bottom_to_display_bottom - screw_depth - $tolerance/2])
+        left_right()
+          cylinder(screw_depth + $tolerance/2 + $fudge, screw_true_inner_radius, screw_true_inner_radius);
     }
+  }
+
 }
 
 module board_grips(
@@ -413,10 +444,10 @@ housing(
   button_offset = 20.1,
   display_extension = 2.8,
   display_height = 27,
-  display_guide_radius = 1.6,
+  board_screw_minor_radius = 1.61/2, // M2*10
+  board_screw_depth = 5,
   display_guide_dist = 34,
   display_guide_offset_y = 3,
-  display_board_thickness = 1.5,
   battery_length = 60,
   battery_width = 50,
   battery_thickness = 7.25,
@@ -439,5 +470,6 @@ housing(
   stem_width = 46,
   stem_clearance = 10,
   $fn=60,
-  $tolerance = 0.7
+  $tolerance = 0.7,
+  $fudge = 0.00001
 );
