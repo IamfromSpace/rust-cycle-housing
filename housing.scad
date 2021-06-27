@@ -160,7 +160,6 @@ module housing(
 
     // TODO: The buttons are not pressable without some sort of implement (was
     // using a pocket road-side allen key)
-    // TODO: The button openings are offset too far to the right
     translate([0, inner_y - $tolerance/2, 0])
       button_wall(
         thickness,
@@ -207,7 +206,7 @@ module button_wall(
   difference() {
     cube([length, thickness, button_offset_z + button_opening_z]);
     for (i = [0:4]) {
-      translate([i * button_x + thickness + button_offset_x, 0, button_offset_z])
+      translate([i * button_x + button_offset_x, 0, button_offset_z])
         cube([button_opening_x, thickness, button_opening_z]);
     }
   }
