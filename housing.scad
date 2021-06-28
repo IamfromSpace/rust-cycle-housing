@@ -170,10 +170,6 @@ module housing(
             battery_housing_screw_housing("TOP");
     }
 
-    // TODO: The rods only act as guides, but offer no tension.  The are also
-    // short enough that the adapter board tends to ride up and then on top.
-    // Either these rods need to be thicker or extended or the top of the
-    // housing needs to hold down the boards.
     translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
       for (x = [0, 1]) {
         translate([x*pi_rod_spacing_x, 0, 0]) {
