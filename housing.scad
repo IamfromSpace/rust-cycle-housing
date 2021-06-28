@@ -6,6 +6,8 @@ module housing(
   pi_rod_spacing_y, // distance from the screw hole centers of the pi along the y axis
   pi_rod_clearance, // distance from the pi screw hole centers to the edge of the board
   pi_solder_clearance, // height of the solder joints on the underside of the pi
+  pi_board_thickness, // thickness of the pi board
+  pi_to_adapter_spacing, // the space between the pi and the adapter (neither board thickness is considered)
   button_shim_extension, // how much further the button shim sticks out beyond the pi
   button_shim_height, // distance from the bottom of the pi to the bottom of the shim
   button_x, // total width of a button
@@ -14,7 +16,9 @@ module housing(
   button_offset, // distance from center button E to its closest side of the pi board (measured along the length of the pi).
   display_extension, // how much further the display sticks out beyond the button shim
   display_height, // distance between the bottom of the pi board and the bottom of the display board
+  board_screw_major_radius, // radius of the screw holes on the display board
   board_screw_minor_radius, // radius of the screw holes on the display board
+  board_screw_head_radius, // radius of the screw holes on the display board
   board_screw_depth, // How deep screws that secure boards will go
   display_guide_dist, // distance between the screw holes along the button-side edge
   display_guide_offset_y, // distance between top of the board the screw holes
@@ -42,6 +46,13 @@ module housing(
   explode = 20, // (view only) separation between components when rendering
   component = "ALL"  // Which part to render
 ) {
+  board_screw_washer_height = screw_housing_top_height(
+    0,
+    board_screw_head_radius,
+    thickness,
+    board_screw_major_radius
+  );
+  pi_offset_z = max(pi_solder_clearance, board_screw_washer_height + $tolerance/2);
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
   inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
@@ -131,6 +142,19 @@ module housing(
         bc("TOP");
     }
 
+  module pi_spacer(component = "ALL") {
+    double_ended_screw_housing(
+      thickness,
+      pi_to_adapter_spacing,
+      board_screw_major_radius,
+      board_screw_minor_radius,
+      board_screw_head_radius,
+      // NOTE: We use explode to demonstrate spacing from the board
+      explode = pi_board_thickness + explode,
+      component = component
+    );
+  }
+
   if (component == "MAIN" || component == "ALL") {
     translate([0, 0, -thickness]) {
       difference() {
@@ -151,12 +175,18 @@ module housing(
     // Either these rods need to be thicker or extended or the top of the
     // housing needs to hold down the boards.
     translate([pi_offset_x + pi_rod_clearance, pi_offset_y + pi_rod_clearance, 0])
-      for (x = [0, 1])
-        for (y = [0, 1])
-          translate([x*pi_rod_spacing_x, y*pi_rod_spacing_y, 0]) {
-            cylinder(pi_rod_height + pi_solder_clearance, pi_rod_radius - $tolerance/2, pi_rod_radius - $tolerance/2);
-            cylinder(pi_solder_clearance, pi_rod_clearance, pi_rod_clearance);
+      for (x = [0, 1]) {
+        translate([x*pi_rod_spacing_x, 0, 0]) {
+          translate([0, pi_rod_spacing_y, 0]) {
+            cylinder(pi_rod_height + pi_offset_z, pi_rod_radius - $tolerance/2, pi_rod_radius - $tolerance/2);
+            cylinder(pi_offset_z, pi_rod_clearance, pi_rod_clearance);
           }
+
+          if (component == "ALL")
+            translate([0, 0, $tolerance/2 + explode])
+              pi_spacer();
+        }
+      }
 
     // TODO: The buttons are not pressable without some sort of implement (was
     // using a pocket road-side allen key)
@@ -164,7 +194,7 @@ module housing(
       button_wall(
         thickness,
         joining_plane_x,
-        display_height + pi_solder_clearance,
+        display_height + pi_offset_z,
         button_x,
         button_opening_x,
         button_opening_z,
@@ -185,6 +215,15 @@ module housing(
     translate([pi_offset_x, 0, 0])
       board_grips(thickness, gps_board_thickness, gps_board_width, gps_usb_width, gps_safe_grip_depth);
   }
+
+  if (component == "PI_SPACER_BOTTOM")
+    pi_spacer("BOTTOM");
+
+  if (component == "PI_SPACER_MIDDLE")
+    pi_spacer("MIDDLE");
+
+  if (component == "PI_SPACER_TOP")
+    pi_spacer("TOP");
 }
 
 module button_wall(
@@ -284,6 +323,13 @@ module board_grips(
         cube([(length - gap_width)/2, thickness, grip_height]);
 }
 
+function screw_housing_top_height(
+  insert_depth,
+  head_radius,
+  thickness,
+  major_radius,
+) = max(head_radius - major_radius + thickness, insert_depth);
+
 module screw_housing(
   screwed_depth,
   insert_depth,
@@ -299,7 +345,12 @@ module screw_housing(
   mode = "COMPOSITE"
 ) {
   head_depth = head_radius - major_radius;
-  true_insert_depth = max(head_depth + thickness, insert_depth);
+  true_insert_depth = screw_housing_top_height(
+    insert_depth,
+    head_radius,
+    thickness,
+    major_radius
+  );
   depth = screwed_depth + true_insert_depth;
   excess_depth = true_insert_depth - head_depth - thickness;
   alignment
@@ -428,6 +479,53 @@ module bar_clamp(
   }
 }
 
+module double_ended_screw_housing(
+  thickness,
+  spacing,
+  major_radius,
+  minor_radius,
+  head_radius,
+  insert_depth = 0,
+  component = "ALL",
+  explode = 20,
+) {
+  true_insert_depth = screw_housing_top_height(
+    insert_depth,
+    head_radius,
+    thickness,
+    major_radius
+  );
+
+  module sh(component) {
+    screw_housing(
+      screwed_depth = spacing,
+      insert_depth = true_insert_depth,
+      thickness = thickness,
+      major_radius = major_radius,
+      minor_radius = minor_radius,
+      head_radius = head_radius,
+      component = component == "MIDDLE" ? "BOTTOM" : "TOP",
+      is_stacked = component != "TOP",
+      is_flipped = component != "TOP",
+      is_flat = false,
+      align = "CENTER",
+      mode = "COMPOSITE"
+    );
+  }
+
+  if (component == "ALL" || component == "BOTTOM")
+    sh("BOTTOM");
+
+  translate([0, 0, component == "ALL" ? explode : 0]) {
+    if (component == "ALL" || component == "MIDDLE")
+      sh("MIDDLE");
+
+    translate([0, 0, component == "ALL" ? true_insert_depth + spacing + explode : 0])
+      if (component == "ALL" || component == "TOP")
+        sh("TOP");
+  }
+}
+
 housing(
   thickness = 2,
   pi_rod_radius = (2.75 - 0.05)/2,
@@ -436,6 +534,8 @@ housing(
   pi_rod_spacing_y = 23,
   pi_rod_clearance = 3.5,
   pi_solder_clearance = 2,
+  pi_board_thickness = 1.5,
+  pi_to_adapter_spacing = 13,
   button_shim_extension = 6,
   button_shim_height = 4,
   button_x = 8.7,
@@ -444,7 +544,9 @@ housing(
   button_offset = 20.1,
   display_extension = 2.8,
   display_height = 27,
-  board_screw_minor_radius = 1.61/2, // M2*10
+  board_screw_major_radius = 2/2, // M2*10
+  board_screw_minor_radius = 1.61/2,
+  board_screw_head_radius = 3.5/2,
   board_screw_depth = 5,
   display_guide_dist = 34,
   display_guide_offset_y = 3,
