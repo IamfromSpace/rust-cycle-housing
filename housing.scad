@@ -16,6 +16,7 @@ module housing(
   button_opening_x, // width of the opening to reveal the button
   button_offset, // distance from center button E to its closest side of the pi board (measured along the length of the pi).
   button_impression_thickness, // thickness of the button backing
+  button_throw, // how much travel is required to depress the button
   display_extension, // how much further the display sticks out beyond the button shim
   display_height, // distance between the bottom of the pi board and the bottom of the display board
   board_screw_major_radius, // radius of the screw holes on the display board
@@ -167,6 +168,7 @@ module housing(
       pi_offset_x + button_offset,
       button_shim_height + pi_solder_clearance,
       button_impression_thickness,
+      button_throw,
       display_extension - button_impression_thickness - $tolerance,
       board_screw_minor_radius,
       board_screw_depth,
@@ -240,6 +242,7 @@ module button_wall(
   button_offset_x, // offset for the buttons (wall edge to first button center)
   button_offset_z, // offset for the buttons (wall bottom to button center)
   button_impression_thickness, // how thick the backing of the button is
+  button_throw, // how much travel is required to depress the button
   extension, // how much further the top of the wall should extend
   screw_inner_radius, // radius of the screw holes on the board
   screw_depth, // how deep the board mounting screws will go into the wall
@@ -256,10 +259,7 @@ module button_wall(
   function single_button_def(is_positive) =
     HButton(
       radius = button_opening_x/2 - (is_positive ? $tolerance/2 : 0),
-      // TODO: In reality, this should be based on thickness, throw, and
-      // tolerance so that there is always "enough" button to depress the
-      // button fully, without recessing into the wall.
-      depth = 2*thickness,
+      depth = $tolerance/2 + button_throw + thickness + button_impression_thickness + $tolerance,
       impression_thickness = button_impression_thickness,
       x_align = "BOTTOM"
     );
@@ -573,6 +573,7 @@ housing(
   button_opening_x = 2.85,
   button_offset = 20.1,
   button_impression_thickness = 0.5,
+  button_throw = 0.2,
   display_extension = 2.8,
   display_height = 27,
   board_screw_major_radius = 2/2, // M2*10
