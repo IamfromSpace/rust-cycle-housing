@@ -57,7 +57,7 @@ module housing(
   );
   pi_offset_z = max(pi_solder_clearance, board_screw_washer_height + $tolerance/2);
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
-  inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness + $tolerance;
+  inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness + $tolerance/2;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
   inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout;
@@ -259,7 +259,7 @@ module button_wall(
   function single_button_def(is_positive) =
     HButton(
       radius = button_opening_x/2 - (is_positive ? $tolerance/2 : 0),
-      depth = $tolerance/2 + button_throw + thickness + button_impression_thickness + $tolerance,
+      depth = $tolerance/2 + button_throw + thickness + button_impression_thickness + $tolerance/2,
       impression_thickness = button_impression_thickness,
       x_align = "BOTTOM"
     );
