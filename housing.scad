@@ -166,7 +166,7 @@ module housing(
       button_x,
       button_opening_x,
       pi_offset_x + button_offset,
-      button_shim_height + pi_solder_clearance,
+      button_shim_height + pi_offset_z,
       button_impression_thickness,
       button_throw,
       display_extension - button_impression_thickness - $tolerance,
