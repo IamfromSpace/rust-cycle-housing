@@ -18,7 +18,7 @@ module h_button(hButton) {
   z_align = hButton[4];
   height = get_height(hButton);
 
-  true_depth = depth + impression_thickness;
+  true_depth = depth + impression_thickness - radius;
 
   x_pos
     = x_align == "BOTTOM" ? radius
@@ -32,9 +32,13 @@ module h_button(hButton) {
 
 
   translate([x_pos, 0, z_pos]) {
-    cylinder(true_depth, radius, radius);
-    rotate([0, 0, -45])
-      cube([radius, radius, true_depth]);
+    hull() {
+      cylinder(true_depth, radius, radius);
+      rotate([0, 0, -45])
+        cube([radius, radius, true_depth]);
+      translate([0, 0, true_depth])
+        sphere(radius);
+    }
     translate([-radius, -radius, 0])
       cube([height, 2*radius, impression_thickness]);
   }
