@@ -9,7 +9,7 @@ module housing(
   pi_board_thickness, // thickness of the pi board
   pi_to_adapter_spacing, // the space between the pi and the adapter (neither board thickness is considered)
   button_shim_extension, // how much further the button shim sticks out beyond the pi
-  button_shim_height, // distance from the bottom of the pi to the bottom of the shim
+  button_shim_height, // distance from the bottom of the pi to the center of the button shim button
   button_x, // total width of a button
   button_opening_x, // width of the opening to reveal the button
   button_opening_z, // height of the opening to reveal the button
@@ -243,14 +243,14 @@ module button_wall(
   screw_true_outer_radius = thickness + screw_true_inner_radius;
 
   difference() {
-    cube([length, thickness, button_offset_z + button_opening_z]);
+    cube([length, thickness, button_offset_z + button_opening_z/2]);
     for (i = [0:4]) {
-      translate([i * button_x + button_offset_x - button_opening_x/2, 0, button_offset_z])
+      translate([i * button_x + button_offset_x - button_opening_x/2, 0, button_offset_z - button_opening_z/2])
         cube([button_opening_x, thickness, button_opening_z]);
     }
   }
 
-  button_shim_bottom_to_display_bottom = height - button_offset_z - button_opening_z;
+  button_shim_bottom_to_display_bottom = height - (button_offset_z + button_opening_z/2);
 
   module left_right() {
     for(i = [-1,1])
@@ -258,7 +258,7 @@ module button_wall(
         children();
   }
 
-  translate([0, 0, button_offset_z + button_opening_z]) {
+  translate([0, 0, button_offset_z + button_opening_z/2]) {
     difference() {
       union() {
         rotate([90, 0, 0])
@@ -533,7 +533,7 @@ housing(
   pi_board_thickness = 1.5,
   pi_to_adapter_spacing = 13,
   button_shim_extension = 6,
-  button_shim_height = 4,
+  button_shim_height = 7,
   button_x = 8.7,
   button_opening_x = 6.7,
   button_opening_z = 4.25,
