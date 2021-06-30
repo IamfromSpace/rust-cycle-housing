@@ -1,3 +1,5 @@
+use <h_buttons.scad>;
+
 module housing(
   thickness, // general thickness of walls
   pi_rod_radius, // radius of the screw holes on the pi
@@ -12,8 +14,8 @@ module housing(
   button_shim_height, // distance from the bottom of the pi to the center of the button shim button
   button_x, // total width of a button
   button_opening_x, // width of the opening to reveal the button
-  button_opening_z, // height of the opening to reveal the button
   button_offset, // distance from center button E to its closest side of the pi board (measured along the length of the pi).
+  button_impression_thickness, // thickness of the button backing
   display_extension, // how much further the display sticks out beyond the button shim
   display_height, // distance between the bottom of the pi board and the bottom of the display board
   board_screw_major_radius, // radius of the screw holes on the display board
@@ -54,7 +56,7 @@ module housing(
   );
   pi_offset_z = max(pi_solder_clearance, board_screw_washer_height + $tolerance/2);
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
-  inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance;
+  inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness + $tolerance;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
   inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout;
@@ -155,6 +157,27 @@ module housing(
     );
   }
 
+  module bw(component) {
+    button_wall(
+      thickness,
+      joining_plane_x,
+      display_height + pi_offset_z,
+      button_x,
+      button_opening_x,
+      pi_offset_x + button_offset,
+      button_shim_height + pi_solder_clearance,
+      button_impression_thickness,
+      display_extension - button_impression_thickness - $tolerance,
+      board_screw_minor_radius,
+      board_screw_depth,
+      display_guide_dist,
+      display_guide_offset_y,
+      pi_offset_x + pi_length_x/2,
+      component = component,
+      explode = explode
+    );
+  }
+
   if (component == "MAIN" || component == "ALL") {
     translate([0, 0, -thickness]) {
       difference() {
@@ -184,25 +207,8 @@ module housing(
         }
       }
 
-    // TODO: The buttons are not pressable without some sort of implement (was
-    // using a pocket road-side allen key)
     translate([0, inner_y - $tolerance/2, 0])
-      button_wall(
-        thickness,
-        joining_plane_x,
-        display_height + pi_offset_z,
-        button_x,
-        button_opening_x,
-        button_opening_z,
-        pi_offset_x + button_offset,
-        button_shim_height + pi_solder_clearance,
-        display_extension,
-        board_screw_minor_radius,
-        board_screw_depth,
-        display_guide_dist,
-        display_guide_offset_y,
-        pi_offset_x + pi_length_x/2
-      );
+      bw(component == "ALL" ? "ALL" : "WALL");
 
     // TODO: These fit nicely, but the vibrations jostle it out of the grips.
     // They need to be tighter (half tolerance, no tolerance?  Is there a
@@ -220,6 +226,9 @@ module housing(
 
   if (component == "PI_SPACER_TOP")
     pi_spacer("TOP");
+
+  if (component == "BUTTON")
+    bw("BUTTON");
 }
 
 module button_wall(
@@ -228,29 +237,40 @@ module button_wall(
   height, // height of the wall
   button_x, // total width of a button
   button_opening_x, // width of the button opening
-  button_opening_z, // width of the button opening
-  button_offset_x, // offset for the buttons
-  button_offset_z, // offset for the buttons
+  button_offset_x, // offset for the buttons (wall edge to first button center)
+  button_offset_z, // offset for the buttons (wall bottom to button center)
+  button_impression_thickness, // how thick the backing of the button is
   extension, // how much further the top of the wall should extend
   screw_inner_radius, // radius of the screw holes on the board
   screw_depth, // how deep the board mounting screws will go into the wall
   screw_dist, // distance between the screw holes along the button-side edge
   screw_offset_y, // distance between top of the board the screw holes
-  board_center_offset // how far the center of the board is from the origin
+  board_center_offset, // how far the center of the board is from the origin
+  component = "ALL",
+  explode = 20,
 ) {
   screw_center_y = extension - screw_offset_y;
   screw_true_inner_radius = screw_inner_radius + $tolerance/2;
   screw_true_outer_radius = thickness + screw_true_inner_radius;
 
-  difference() {
-    cube([length, thickness, button_offset_z + button_opening_z/2]);
-    for (i = [0:4]) {
-      translate([i * button_x + button_offset_x - button_opening_x/2, 0, button_offset_z - button_opening_z/2])
-        cube([button_opening_x, thickness, button_opening_z]);
-    }
-  }
+  function single_button_def(is_positive) =
+    HButton(
+      radius = button_opening_x/2 - (is_positive ? $tolerance/2 : 0),
+      // TODO: In reality, this should be based on thickness, throw, and
+      // tolerance so that there is always "enough" button to depress the
+      // button fully, without recessing into the wall.
+      depth = 2*thickness,
+      impression_thickness = button_impression_thickness,
+      x_align = "BOTTOM"
+    );
+  button_opening_z = get_height(single_button_def(false));
 
-  button_shim_bottom_to_display_bottom = height - (button_offset_z + button_opening_z/2);
+  module button_row(is_positive) {
+    for (i = [0:4])
+      translate([i * button_x + button_offset_x, 0, button_offset_z - button_opening_z/2])
+        rotate([-90, -90, 0])
+          h_button(single_button_def(is_positive));
+  }
 
   module left_right() {
     for(i = [-1,1])
@@ -258,49 +278,64 @@ module button_wall(
         children();
   }
 
-  translate([0, 0, button_offset_z + button_opening_z/2]) {
+  if (component == "BUTTON")
+    h_button(single_button_def(true));
+
+  if (component == "ALL")
+    translate([0, -explode, $tolerance/2])
+      button_row(true);
+
+  if (component == "ALL" || component == "WALL") {
     difference() {
-      union() {
-        rotate([90, 0, 0])
-        rotate([0, 90, 0])
-        linear_extrude(length)
-          polygon(
-            [ [0,0]
-            , [0, button_shim_bottom_to_display_bottom]
-            , [thickness + extension, button_shim_bottom_to_display_bottom]
-            , [thickness, 0]
-            ]
-          );
+      cube([length, thickness, button_offset_z + button_opening_z/2]);
+      button_row(false);
+    }
 
+    button_shim_bottom_to_display_bottom = height - (button_offset_z + button_opening_z/2);
 
-        intersection() {
-          translate([0, screw_center_y, 0])
-            left_right() {
-              cylinder(button_shim_bottom_to_display_bottom, screw_true_outer_radius, screw_true_outer_radius);
-
-              translate([-screw_true_outer_radius, 0, 0])
-                cube([2*screw_true_outer_radius, -screw_center_y, button_shim_bottom_to_display_bottom]);
-            }
-
+    translate([0, 0, button_offset_z + button_opening_z/2]) {
+      difference() {
+        union() {
           rotate([90, 0, 0])
-          rotate([0, 90, 0])
-          linear_extrude(length)
+            rotate([0, 90, 0])
+            linear_extrude(length)
             polygon(
-              [ [0,0]
-              , [0, button_shim_bottom_to_display_bottom]
-              , [screw_center_y - screw_true_outer_radius, button_shim_bottom_to_display_bottom]
-              , [screw_center_y - screw_true_outer_radius, button_shim_bottom_to_display_bottom - screw_depth]
-              ]
-            );
-        }
-      }
+                [ [0,0]
+                , [0, button_shim_bottom_to_display_bottom]
+                , [thickness + extension, button_shim_bottom_to_display_bottom]
+                , [thickness, 0]
+                ]
+                );
 
-      translate([0, screw_center_y, button_shim_bottom_to_display_bottom - screw_depth - $tolerance/2])
-        left_right()
-          cylinder(screw_depth + $tolerance/2 + $fudge, screw_true_inner_radius, screw_true_inner_radius);
+
+          intersection() {
+            translate([0, screw_center_y, 0])
+              left_right() {
+                cylinder(button_shim_bottom_to_display_bottom, screw_true_outer_radius, screw_true_outer_radius);
+
+                translate([-screw_true_outer_radius, 0, 0])
+                  cube([2*screw_true_outer_radius, -screw_center_y, button_shim_bottom_to_display_bottom]);
+              }
+
+            rotate([90, 0, 0])
+              rotate([0, 90, 0])
+              linear_extrude(length)
+              polygon(
+                  [ [0,0]
+                  , [0, button_shim_bottom_to_display_bottom]
+                  , [screw_center_y - screw_true_outer_radius, button_shim_bottom_to_display_bottom]
+                  , [screw_center_y - screw_true_outer_radius, button_shim_bottom_to_display_bottom - screw_depth]
+                  ]
+                  );
+          }
+        }
+
+        translate([0, screw_center_y, button_shim_bottom_to_display_bottom - screw_depth - $tolerance/2])
+          left_right()
+            cylinder(screw_depth + $tolerance/2 + $fudge, screw_true_inner_radius, screw_true_inner_radius);
+      }
     }
   }
-
 }
 
 module board_grips(
@@ -535,9 +570,9 @@ housing(
   button_shim_extension = 6,
   button_shim_height = 7,
   button_x = 8.7,
-  button_opening_x = 6.7,
-  button_opening_z = 4.25,
+  button_opening_x = 2.85,
   button_offset = 20.1,
+  button_impression_thickness = 0.5,
   display_extension = 2.8,
   display_height = 27,
   board_screw_major_radius = 2/2, // M2*10
