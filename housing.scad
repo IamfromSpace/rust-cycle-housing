@@ -597,7 +597,7 @@ housing(
   display_extension = 2.8,
   display_height = 27,
   board_screw_major_radius = 2/2, // M2*10
-  board_screw_minor_radius = 1.61/2,
+  board_screw_minor_radius = 1.54/2,
   board_screw_head_radius = 3.5/2,
   board_screw_depth = 5,
   display_guide_dist = 34,
