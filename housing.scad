@@ -110,7 +110,7 @@ module housing(
         cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
 
         for (i = [0,1])
-          translate([(1 - i) * (joining_plane_x + 2 * thickness) + $tolerance/2, joining_plane_y/2 + thickness + $tolerance/2, 0])
+          translate([(1 - i) * (joining_plane_x + 2 * thickness), joining_plane_y/2 + thickness + $tolerance/2, 0])
             rotate([0, 0, i * 180])
               battery_housing_screw_housing("BOTTOM");
       }
@@ -207,7 +207,7 @@ module housing(
       }
 
       for (i = [0,1])
-        translate([(1 - i) * (joining_plane_x + 2 * thickness) - thickness, joining_plane_y/2, 0])
+        translate([(1 - i) * (joining_plane_x + 2 * thickness) - thickness - $tolerance/2, joining_plane_y/2, 0])
           rotate([0, 0, i * 180])
             battery_housing_screw_housing("TOP");
     }
