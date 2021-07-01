@@ -575,6 +575,9 @@ module double_ended_screw_housing(
 }
 
 housing(
+  // TODO: For some test prints, there was not enough contact from the bottom
+  // wall to the side wall, making the sidewall snap off.  If this happens at
+  // full size, then it may make sense to create a wider base that narrows.
   thickness = 2,
   pi_rod_radius = (2.75 - 0.05)/2,
   pi_rod_height = 16.5,
