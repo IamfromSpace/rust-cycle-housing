@@ -60,7 +60,7 @@ module housing(
   inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness + $tolerance/2;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
-  inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout;
+  inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout + 2*thickness;
 
   joining_plane_x = max(inner_x, battery_length + $tolerance);
   joining_plane_y = max(inner_y, battery_width + $tolerance);
@@ -181,11 +181,28 @@ module housing(
   }
 
   if (component == "MAIN" || component == "ALL") {
+    color([1, 1, 1, 0.25]) {
+      translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
+        cube([thickness, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+
+      translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
+        cube([2*thickness + inner_x, thickness, display_height + pi_offset_z]);
+
+      translate([joining_plane_x - $tolerance/2 - 2*thickness, -thickness - $tolerance/2, 0])
+        difference() {
+          cube([3*thickness, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+          translate([thickness, 0, 0])
+            cube([thickness, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+          translate([0, 2*thickness, thickness])
+            cube([3*thickness, -2*thickness + $tolerance + inner_y, display_height + pi_offset_z -thickness]);
+        }
+    }
+
     translate([0, 0, -thickness]) {
       difference() {
         translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
           cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
-        translate([inner_x - power_cutout, 0, 0])
+        translate([inner_x - power_cutout - 2*thickness, 0, 0])
           cube([power_cutout, inner_y, thickness]);
       }
 
