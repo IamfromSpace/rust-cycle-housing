@@ -161,11 +161,11 @@ module housing(
   module bw(component) {
     button_wall(
       thickness,
-      joining_plane_x,
+      joining_plane_x + 2*thickness,
       display_height + pi_offset_z,
       button_x,
       button_opening_x,
-      pi_offset_x + button_offset,
+      pi_offset_x + button_offset + thickness + $tolerance/2,
       button_shim_height + pi_offset_z,
       button_impression_thickness,
       button_throw,
@@ -174,7 +174,7 @@ module housing(
       board_screw_depth,
       display_guide_dist,
       display_guide_offset_y,
-      pi_offset_x + pi_length_x/2,
+      pi_offset_x + pi_length_x/2 + thickness + $tolerance/2,
       component = component,
       explode = explode
     );
@@ -209,7 +209,7 @@ module housing(
         }
       }
 
-    translate([0, inner_y - $tolerance/2, 0])
+    translate([-thickness - $tolerance/2, inner_y + $tolerance/2, 0])
       bw(component == "ALL" ? "ALL" : "WALL");
 
     // TODO: These fit nicely, but the vibrations jostle it out of the grips.
