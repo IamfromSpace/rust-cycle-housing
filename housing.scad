@@ -56,8 +56,8 @@ module housing(
     board_screw_major_radius
   );
   pi_offset_z = max(pi_solder_clearance, board_screw_washer_height + $tolerance/2);
-  pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset;
-  inner_y = pi_offset_y + button_shim_extension + $tolerance + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness + $tolerance/2;
+  pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset + $tolerance;
+  inner_y = pi_offset_y + button_shim_extension + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
   inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout + 2*thickness;
