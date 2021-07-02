@@ -202,7 +202,7 @@ module housing(
       difference() {
         translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
           cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
-        translate([inner_x - power_cutout - 2*thickness, 0, 0])
+        translate([inner_x - power_cutout - 2*thickness - 3/2*$tolerance, -$tolerance/2, 0])
           cube([power_cutout, inner_y, thickness]);
       }
 
