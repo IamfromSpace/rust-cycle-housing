@@ -57,7 +57,7 @@ module housing(
   );
   pi_offset_z = max(pi_solder_clearance, board_screw_washer_height + $tolerance/2);
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset + $tolerance;
-  inner_y = pi_offset_y + button_shim_extension + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness;
+  inner_y = pi_offset_y + button_shim_extension + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness + $tolerance;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
   inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout + 2*thickness + $tolerance;
@@ -183,18 +183,18 @@ module housing(
   if (component == "MAIN" || component == "ALL") {
     color([1, 1, 1, 0.25]) {
       translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
-        cube([thickness, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+        cube([thickness, 2*thickness + inner_y, display_height + pi_offset_z]);
 
       translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
         cube([2*thickness + inner_x, thickness, display_height + pi_offset_z]);
 
       translate([joining_plane_x - $tolerance/2 - 2*thickness - $tolerance, -thickness - $tolerance/2, 0])
         difference() {
-          cube([3*thickness + $tolerance, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+          cube([3*thickness + $tolerance, 2*thickness + inner_y, display_height + pi_offset_z]);
           translate([thickness, 0, 0])
-            cube([thickness + $tolerance, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+            cube([thickness + $tolerance, 2*thickness + inner_y, display_height + pi_offset_z]);
           translate([0, 2*thickness, thickness])
-            cube([3*thickness + $tolerance, -2*thickness + $tolerance + inner_y, display_height + pi_offset_z -thickness]);
+            cube([3*thickness + $tolerance, -2*thickness + inner_y, display_height + pi_offset_z -thickness]);
         }
     }
 
@@ -226,7 +226,7 @@ module housing(
         }
       }
 
-    translate([-thickness - $tolerance/2, inner_y + $tolerance/2, 0])
+    translate([-thickness - $tolerance/2, inner_y - $tolerance/2, 0])
       bw(component == "ALL" ? "ALL" : "WALL");
 
     // TODO: These fit nicely, but the vibrations jostle it out of the grips.
