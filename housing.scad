@@ -390,7 +390,10 @@ module screw_housing(
   is_flipped = false,
   is_flat = true,
   align = "CENTER",
-  mode = "COMPOSITE"
+  mode = "COMPOSITE",
+  spacing = 0, // Distance between the top and bottom or bottom and first shaft
+  shafts = [], // Array of tuples like [[thickness, gap], [thickness, gap], ...]
+  shaft_index = 0,
 ) {
   head_depth = head_radius - major_radius;
   true_insert_depth = screw_housing_top_height(
@@ -451,22 +454,39 @@ module screw_housing(
     }
   }
 
-  translate ([alignment, 0, 0]) {
-    if (component == "BOTTOM")
-      translate([0, 0, is_stacked && is_flipped ? true_insert_depth : 0])
-        difference_mode(mode) {
-          bottom_positive();
-          bottom_negative();
-        }
-    if (component == "TOP")
-      translate([0, 0, is_stacked && !is_flipped ? screwed_depth : 0])
-        translate([0, 0, is_flipped ? true_insert_depth : 0])
-          mirror([0, 0, is_flipped ? 1 : 0])
+  function shaft_sum(arr, i=0, acc=0) = i == len(arr)
+    ? acc
+    : shaft_sum(arr, i+1, acc + arr[i][0] + arr[i][1]);
+
+  total_size = screwed_depth + spacing + true_insert_depth + shaft_sum(shafts);
+
+  translate([0, 0, is_flipped && is_stacked ? total_size : 0])
+    mirror([0, 0, is_flipped && is_stacked ? 1 : 0])
+      translate ([alignment, 0, 0]) {
+        if (component == "BOTTOM")
+          difference_mode(mode) {
+            bottom_positive();
+            bottom_negative();
+          }
+
+        if (component == "SHAFT") {
+          h = total_size - shaft_sum(shafts, shaft_index) - true_insert_depth;
+          translate([0, 0, is_stacked ? h : 0])
             difference_mode(mode) {
-              top_positive();
-              top_negative();
+              positive(shafts[shaft_index][0]);
+              cylinder(shafts[shaft_index][0], major_radius + $tolerance/2, major_radius + $tolerance/2);
             }
-  }
+        }
+
+        if (component == "TOP")
+          translate([0, 0, is_stacked ? total_size - true_insert_depth : 0])
+            translate([0, 0, is_flipped && !is_stacked ? true_insert_depth : 0])
+              mirror([0, 0, is_flipped && !is_stacked ? 1 : 0])
+                difference_mode(mode) {
+                  top_positive();
+                  top_negative();
+                }
+      }
 }
 
 module bar_clamp(
