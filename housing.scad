@@ -60,7 +60,7 @@ module housing(
   inner_y = pi_offset_y + button_shim_extension + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
   pi_offset_x = sd_card_protrusion;
-  inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout + 2*thickness;
+  inner_x = sd_card_protrusion + pi_length_x + $tolerance + power_cutout + 2*thickness + $tolerance;
 
   joining_plane_x = max(inner_x, battery_length + $tolerance);
   joining_plane_y = max(inner_y, battery_width + $tolerance);
@@ -188,13 +188,13 @@ module housing(
       translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
         cube([2*thickness + inner_x, thickness, display_height + pi_offset_z]);
 
-      translate([joining_plane_x - $tolerance/2 - 2*thickness, -thickness - $tolerance/2, 0])
+      translate([joining_plane_x - $tolerance/2 - 2*thickness - $tolerance, -thickness - $tolerance/2, 0])
         difference() {
-          cube([3*thickness, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+          cube([3*thickness + $tolerance, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
           translate([thickness, 0, 0])
-            cube([thickness, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
+            cube([thickness + $tolerance, 2*thickness + $tolerance + inner_y, display_height + pi_offset_z]);
           translate([0, 2*thickness, thickness])
-            cube([3*thickness, -2*thickness + $tolerance + inner_y, display_height + pi_offset_z -thickness]);
+            cube([3*thickness + $tolerance, -2*thickness + $tolerance + inner_y, display_height + pi_offset_z -thickness]);
         }
     }
 
@@ -612,7 +612,7 @@ housing(
   gps_board_thickness = 1,
   gps_usb_width = 12.5,
   gps_safe_grip_depth = 4,
-  power_cutout = 15,
+  power_cutout = 15.3,
   battery_housing_screw_major_radius = 1.5, // M3*12
   battery_housing_screw_minor_radius = 1.2,
   battery_housing_screw_head_radius = 2.75,
