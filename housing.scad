@@ -186,7 +186,7 @@ module housing(
         cube([thickness, 2*thickness + inner_y, display_height + pi_offset_z]);
 
       translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
-        cube([2*thickness + inner_x, thickness, display_height + pi_offset_z]);
+        cube([2*thickness + joining_plane_x, thickness, display_height + pi_offset_z]);
 
       translate([joining_plane_x - $tolerance/2 - 2*thickness - $tolerance, -thickness - $tolerance/2, 0])
         difference() {
@@ -202,7 +202,7 @@ module housing(
       difference() {
         translate([-thickness - $tolerance/2, -thickness - $tolerance/2, 0])
           cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
-        translate([inner_x - power_cutout - 2*thickness - 3/2*$tolerance, -$tolerance/2, 0])
+        translate([joining_plane_x - power_cutout - 2*thickness - 3/2*$tolerance, -$tolerance/2, 0])
           cube([power_cutout, inner_y, thickness]);
       }
 
