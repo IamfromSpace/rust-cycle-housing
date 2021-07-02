@@ -10,6 +10,8 @@ module housing(
   pi_solder_clearance, // height of the solder joints on the underside of the pi
   pi_board_thickness, // thickness of the pi board
   pi_to_adapter_spacing, // the space between the pi and the adapter (neither board thickness is considered)
+  pi_to_button_shim_dist, // the shorted distance between the pi board and the button shim board
+  pi_to_main_screw_depth, // the depth of the screw to hold the pi to the main housing
   button_shim_extension, // how much further the button shim sticks out beyond the pi
   button_shim_height, // distance from the bottom of the pi to the center of the button shim button
   button_x, // total width of a button
@@ -55,7 +57,7 @@ module housing(
     thickness,
     board_screw_major_radius
   );
-  pi_offset_z = max(pi_solder_clearance, board_screw_washer_height + $tolerance/2);
+  pi_offset_z = max(pi_solder_clearance, board_screw_washer_height + $tolerance/2, pi_to_main_screw_depth + $tolerance/2);
   pi_offset_y = gps_board_thickness/2 + thickness + gps_board_offset + $tolerance;
   inner_y = pi_offset_y + button_shim_extension + pi_rod_spacing_y + 2*pi_rod_clearance + button_impression_thickness + $tolerance;
   pi_length_x = pi_rod_spacing_x + 2*pi_rod_clearance;
@@ -154,6 +156,7 @@ module housing(
       board_screw_head_radius,
       // NOTE: We use explode to demonstrate spacing from the board
       explode = pi_board_thickness + explode,
+      insert_depth = pi_offset_z,
       component = component
     );
   }
@@ -179,6 +182,26 @@ module housing(
       explode = explode
     );
   }
+
+  module pi_to_main_housing(component, shaft_index = 0) {
+    screw_housing(
+      pi_offset_z,
+      0,
+      thickness,
+      board_screw_major_radius,
+      board_screw_minor_radius,
+      board_screw_head_radius,
+      shafts = [[pi_to_button_shim_dist, pi_board_thickness + explode]],
+      spacing = pi_board_thickness + explode,
+      component = component,
+      shaft_index = shaft_index,
+      is_stacked = true,
+      is_flipped = false,
+      is_flat = false,
+      align = "CENTER"
+    );
+  }
+
 
   if (component == "MAIN" || component == "ALL") {
     color([1, 1, 1, 0.25]) {
@@ -216,8 +239,11 @@ module housing(
       for (x = [0, 1]) {
         translate([x*pi_rod_spacing_x, 0, 0]) {
           translate([0, pi_rod_spacing_y, 0]) {
-            cylinder(pi_rod_height + pi_offset_z, pi_rod_radius - $tolerance/2, pi_rod_radius - $tolerance/2);
-            cylinder(pi_offset_z, pi_rod_clearance, pi_rod_clearance);
+            pi_to_main_housing("BOTTOM");
+            if (component == "ALL") {
+              pi_to_main_housing("SHAFT", 0);
+              pi_to_main_housing("TOP");
+            }
           }
 
           if (component == "ALL")
@@ -248,6 +274,12 @@ module housing(
 
   if (component == "BUTTON")
     bw("BUTTON");
+
+  if (component == "PI_TO_MAIN_SCREW_TOP")
+    pi_to_main_housing("TOP");
+
+  if (component == "PI_TO_MAIN_SCREW_SHAFT")
+    pi_to_main_housing("SHAFT", 0);
 }
 
 module button_wall(
@@ -607,6 +639,8 @@ housing(
   pi_solder_clearance = 2,
   pi_board_thickness = 1.5,
   pi_to_adapter_spacing = 13,
+  pi_to_button_shim_dist = 2.5,
+  pi_to_main_screw_depth = 4,
   button_shim_extension = 6,
   button_shim_height = 7,
   button_x = 8.7,
