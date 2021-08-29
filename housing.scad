@@ -41,6 +41,8 @@ module housing(
   battery_housing_screw_major_radius, // radius of the screw that connects the battery housing to the main housing, from center to outermost thread
   battery_housing_screw_minor_radius, // radius of the screw that connects the battery housing to the main housing, from center shaft (threads ignored)
   battery_housing_screw_head_radius, // radius of the screw that connects the battery housing to the main housing, from center to the outer most point of the head
+  cantilever_thickness, // How thick the cantilever that connects the main body to the bar clamps
+  cantilever_width, // How wide the cutout for the cantilevers that connect the main body to the bar clamps should be (ignoring tolerance).
   bar_radius, // radius of the bars where the stem is clamped
   bar_clamp_gap, // gap between the top and bottom of the bar clamp
   bar_clamp_screw_major_radius, // radius of the screw that connects the bar clamp, from center to outermost thread
@@ -75,8 +77,9 @@ module housing(
       battery_housing_screw_major_radius,
       battery_housing_screw_minor_radius,
       battery_housing_screw_head_radius,
-      component,
-      align = "HEAD"
+      component = component == "MIDDLE" ? "SHAFT" : component,
+      align = "HEAD",
+      shafts = [[cantilever_thickness + thickness + $tolerance, 0]]
     );
   }
 
@@ -106,7 +109,35 @@ module housing(
           bc(component);
   }
 
-  translate([-$tolerance/2, -$tolerance/2, -thickness - battery_thickness -$tolerance - explode]) {
+  translate([-$tolerance/2, -$tolerance/2, -thickness - cantilever_thickness -$tolerance - explode]) {
+    if (component == "CANTILEVER_SLOT" || component == "ALL") {
+      translate([-thickness, -thickness, -thickness]) {
+        translate([x_side_length + thickness, 0, 0])
+          cube([cantilever_width + $tolerance, joining_plane_y + 2*thickness, thickness]);
+
+        for (i = [0,1])
+          translate([(1 - i) * (joining_plane_x + 2 * thickness), joining_plane_y/2 + thickness + $tolerance/2, 0])
+            rotate([0, 0, i * 180])
+              battery_housing_screw_housing("MIDDLE");
+      }
+
+      x_side_length = (joining_plane_x - (cantilever_width + $tolerance))/2;
+
+      translate([(cantilever_width + $tolerance)/2 + x_side_length, 0, 0])
+      for (j = [0,1])
+        mirror([j,0,0]) {
+          for (i = [0,1])
+            translate([(cantilever_width + $tolerance)/2, i*(joining_plane_y + thickness) - thickness, -thickness])
+              cube([x_side_length + thickness, thickness, thickness + cantilever_thickness + $tolerance]);
+
+          for (i = [0,1])
+            translate([i*x_side_length + (cantilever_width + $tolerance)/2, -thickness, -thickness])
+              cube([thickness, joining_plane_y + 2*thickness, thickness + cantilever_thickness + $tolerance]);
+        }
+    }
+  }
+
+  translate([-$tolerance/2, -$tolerance/2, -2*thickness - cantilever_thickness - battery_thickness -2 * $tolerance - 2 * explode]) {
     if (component == "BATTERY" || component == "ALL") {
       translate([-thickness, -thickness, -thickness]) {
         cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
@@ -670,6 +701,8 @@ housing(
   battery_housing_screw_major_radius = 1.5, // M3*12
   battery_housing_screw_minor_radius = 1.2,
   battery_housing_screw_head_radius = 2.75,
+  cantilever_thickness = 4,
+  cantilever_width = 30,
   bar_radius = 31.8/2,
   bar_clamp_gap = 1,
   bar_clamp_screw_major_radius = 1.5, // M3*12
