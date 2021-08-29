@@ -136,16 +136,16 @@ module housing(
       for (i = [0,1])
         translate([battery_length + $tolerance, battery_width * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, 0])
           cube([thickness, battery_width * battery_guard_ratio/2, battery_thickness/2]);
-      }
-
-      if (component == "ALL")
-        translate([joining_plane_x/2, -thickness, -thickness + 2*explode])
-          rotate([0, 0, -90])
-            bc_pair("TOP");
-
-      if (component == "BAR_CLAMP_TOP")
-        bc("TOP");
     }
+
+    if (component == "ALL")
+      translate([joining_plane_x/2, -thickness, -thickness + 2*explode])
+        rotate([0, 0, -90])
+          bc_pair("TOP");
+
+    if (component == "BAR_CLAMP_TOP")
+      bc("TOP");
+  }
 
   module pi_spacer(component = "ALL") {
     double_ended_screw_housing(
