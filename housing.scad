@@ -127,7 +127,8 @@ module housing(
             [cantilever_width/2 + cantilever_undercut, joining_plane_y + 2*thickness + $tolerance + thickness],
             [cantilever_width/2, joining_plane_y + 2*thickness + $tolerance + thickness + cantilever_undercut],
             [cantilever_width/2 - cantilever_depth/2, joining_plane_y + 2*thickness + $tolerance + thickness + cantilever_undercut],
-            [cantilever_width/2 - cantilever_depth, 0],
+            [cantilever_width/2 - cantilever_depth, cantilever_depth],
+            [0, cantilever_depth],
           ]);
 
       rotate([0, 0, -90])
@@ -725,7 +726,7 @@ housing(
   battery_housing_screw_head_radius = 2.75,
   cantilever_thickness = 4,
   cantilever_width = 30,
-  cantilever_undercut = 5,
+  cantilever_undercut = 3.2,
   cantilever_depth = 10,
   bar_radius = 31.8/2,
   bar_clamp_gap = 1,
