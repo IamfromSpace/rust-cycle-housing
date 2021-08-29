@@ -43,6 +43,8 @@ module housing(
   battery_housing_screw_head_radius, // radius of the screw that connects the battery housing to the main housing, from center to the outer most point of the head
   cantilever_thickness, // How thick the cantilever that connects the main body to the bar clamps
   cantilever_width, // How wide the cutout for the cantilevers that connect the main body to the bar clamps should be (ignoring tolerance).
+  cantilever_undercut, // How much the end of the cantilever hangs over
+  cantilever_depth, // The thickness of the base of the cantilever in the direction of deflection
   bar_radius, // radius of the bars where the stem is clamped
   bar_clamp_gap, // gap between the top and bottom of the bar clamp
   bar_clamp_screw_major_radius, // radius of the screw that connects the bar clamp, from center to outermost thread
@@ -94,8 +96,8 @@ module housing(
       bar_clamp_screw_major_radius,
       bar_clamp_screw_minor_radius,
       bar_clamp_screw_head_radius,
-      stem_clearance,
-      thickness + battery_thickness + $tolerance,
+      stem_clearance + thickness,
+      2*thickness + cantilever_thickness,
       component = component,
       gap = bar_clamp_gap,
       is_stacked = true
@@ -107,9 +109,41 @@ module housing(
       translate([0, -i * (stem_width + $tolerance)/2, 0])
         mirror([0, (i + 1)/2, 0])
           bc(component);
+
+    if (component == "BOTTOM")
+      translate([0, -(stem_width + $tolerance)/2, 0])
+        cube([thickness, stem_width + $tolerance, 2*thickness + cantilever_thickness]);
   }
 
-  translate([-$tolerance/2, -$tolerance/2, -thickness - cantilever_thickness -$tolerance - explode]) {
+  translate([(joining_plane_x - cantilever_thickness - $tolerance)/2 + thickness, -$tolerance - thickness - explode, -thickness - cantilever_thickness - $tolerance/2 - explode]) {
+    if (component == "BAR_CLAMP_BOTTOM" || component == "ALL") {
+      for(i = [0, 1]) mirror([i, 0, 0])
+        linear_extrude(cantilever_thickness)
+          polygon(points = [
+            [0, 0],
+            [cantilever_width/2, 0],
+            [cantilever_width/2, joining_plane_y + 2*thickness + $tolerance], // Double check y
+            [cantilever_width/2 + cantilever_undercut, joining_plane_y + 2*thickness + $tolerance], // Double check y
+            [cantilever_width/2 + cantilever_undercut, joining_plane_y + 2*thickness + $tolerance + thickness],
+            [cantilever_width/2, joining_plane_y + 2*thickness + $tolerance + thickness + cantilever_undercut],
+            [cantilever_width/2 - cantilever_depth/2, joining_plane_y + 2*thickness + $tolerance + thickness + cantilever_undercut],
+            [cantilever_width/2 - cantilever_depth, 0],
+          ]);
+
+      rotate([0, 0, -90])
+        bc_pair("BOTTOM");
+    }
+
+    if (component == "ALL")
+      translate([0, 0, explode])
+        rotate([0, 0, -90])
+          bc_pair("TOP");
+
+    if (component == "BAR_CLAMP_TOP")
+      bc("TOP");
+  }
+
+  translate([-$tolerance/2, -$tolerance/2, -thickness - cantilever_thickness -$tolerance - 2*explode]) {
     if (component == "CANTILEVER_SLOT" || component == "ALL") {
       translate([-thickness, -thickness, -thickness]) {
         translate([x_side_length + thickness, 0, 0])
@@ -137,7 +171,7 @@ module housing(
     }
   }
 
-  translate([-$tolerance/2, -$tolerance/2, -2*thickness - cantilever_thickness - battery_thickness -2 * $tolerance - 2 * explode]) {
+  translate([-$tolerance/2, -$tolerance/2, -2*thickness - cantilever_thickness - battery_thickness -2 * $tolerance - 3 * explode]) {
     if (component == "BATTERY" || component == "ALL") {
       translate([-thickness, -thickness, -thickness]) {
         cube([joining_plane_x + 2*thickness, joining_plane_y + 2*thickness, thickness]);
@@ -147,10 +181,6 @@ module housing(
             rotate([0, 0, i * 180])
               battery_housing_screw_housing("BOTTOM");
       }
-
-      translate([joining_plane_x/2, -thickness, -thickness])
-        rotate([0, 0, -90])
-          bc_pair("BOTTOM");
 
       for (i = [0,1])
         translate([-thickness, i*(joining_plane_y + thickness) - thickness, 0])
@@ -168,14 +198,6 @@ module housing(
         translate([battery_length + $tolerance, battery_width * ((i+1) * (1 - battery_guard_ratio)/3 + i * battery_guard_ratio/2) + $tolerance/2, 0])
           cube([thickness, battery_width * battery_guard_ratio/2, battery_thickness/2]);
     }
-
-    if (component == "ALL")
-      translate([joining_plane_x/2, -thickness, -thickness + 2*explode])
-        rotate([0, 0, -90])
-          bc_pair("TOP");
-
-    if (component == "BAR_CLAMP_TOP")
-      bc("TOP");
   }
 
   module pi_spacer(component = "ALL") {
@@ -703,6 +725,8 @@ housing(
   battery_housing_screw_head_radius = 2.75,
   cantilever_thickness = 4,
   cantilever_width = 30,
+  cantilever_undercut = 5,
+  cantilever_depth = 10,
   bar_radius = 31.8/2,
   bar_clamp_gap = 1,
   bar_clamp_screw_major_radius = 1.5, // M3*12
